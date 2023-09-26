@@ -1,5 +1,6 @@
 import time
 import multiprocessing
+import matplotlib.pyplot as plt
 
 def CreateUnsorted(n=100):
     import random
@@ -123,7 +124,7 @@ def partition(array,low,high):
     array[high]=tmp
     return i+1
 
-def main():
+def TestSorts():
     CreateUnsorted(10000)
     array=ReadFromUnsorted()
     p1=multiprocessing.Process(target=BubleSort,args=(array,))
@@ -138,6 +139,20 @@ def main():
     p2.join()
     p3.join()
     p4.join()
+
+def TestGraph():
+    x = [1, 2, 3, 4, 5]
+    y = [25, 32, 34, 20, 25]
+    a = [10, 11, 12, 13, 14] 
+    b = [10, 11, 12, 13, 14] 
+    plt.plot(x,y, color="g",label='per')
+    plt.plot(a,b, color="r",label='viy')
+    plt.legend()
+    plt.show()
+
+def main():
+    #TestSorts()
+    TestGraph()
 
 if __name__ == '__main__':
     main()
