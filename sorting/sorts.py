@@ -1,3 +1,4 @@
+import filecmp
 import time
 import multiprocessing
 
@@ -25,7 +26,6 @@ def ReadFromUnsorted():
 def BubleSort(array):    
     n=len(array)
     sorted=array[:]
-    print('1')    
     start_time = time.time()
     for i in range(n-1):
         for j in range(n-i-1):
@@ -45,7 +45,6 @@ def BubleSort(array):
 def ShakerSort(array):
     n=len(array)
     sorted=array[:]
-    print('2')
     start_time=time.time()
     left=0
     right=n-1
@@ -71,15 +70,39 @@ def ShakerSort(array):
     sorted_file.close()
     pass
 
-if __name__ == '__main__':
-    CreateUnsorted(5000)
+def InsertionSort(array):
+    n=len(array)
+    sorted=array[:]
+    start_time=time.time()
+    for i in range(n):
+        key=int(sorted[i])
+        j=i-1
+        while j>=0 and key < int(sorted[j]):
+            sorted[j+1]=sorted[j]
+            j-=1
+        sorted[j+1]=key
+    end_time=time.time()
+    elapsed_time=end_time-start_time
+    print('Время выполнения сортировки вставками: ', elapsed_time)
+    sorted_file = open(r'sorting\InsertionSorted.txt', "w", encoding='utf-8')
+    for i in range(n):        
+        sorted_file.write(str(sorted[i])+'\n')
+    sorted_file.close()
+    pass
+
+def main():
+    CreateUnsorted(10000)
     array=ReadFromUnsorted()
     p1=multiprocessing.Process(target=BubleSort,args=(array,))
-    p2=multiprocessing.Process(target=ShakerSort,args=(array,))
-    p2.start()
+    p2=multiprocessing.Process(target=ShakerSort,args=(array,))    
+    p3=multiprocessing.Process(target=InsertionSort,args=(array,))    
     p1.start()
-    
+    p2.start()
+    p3.start()
     p1.join()
     p2.join()
-    BubleSort(array)
-    ShakerSort(array)
+    p3.join()
+
+if __name__ == '__main__':
+    #main()
+    print(filecmp.cmp(r'sorting\ShakerSorted.txt', r'sorting\InsertionSorted.txt'))

@@ -163,3 +163,4 @@ cython_debug/
 UnSorted.txt
 BubleSorted.txt
 ShakerSorted.txt
+InsertionSorted.txt
