@@ -81,12 +81,15 @@ enemy_animation_cooldown=75
 move_animation_cooldown=10
 fight_cooldown=600
 
-hero_character='Warrior'
-enemy_character='Thief'
-
+hero_character='Thief'
+enemy_character='Knight'
 
 def main():
     pygame.init()
+
+    pygame.mixer.music.load('classes/Audio/N21_-_peripleumonicis.mp3')
+    pygame.mixer.music.set_volume(0.3)
+    pygame.mixer.music.play()
 
     last_update=pygame.time.get_ticks()
     frame=0  
@@ -134,8 +137,8 @@ def main():
                             case pygame.K_BACKSPACE:
                                 user_text=user_text[:-1]
                             case pygame.K_RETURN:
-                                hero=createHero(user_text, hero_character)
-                                enemy=createEnemy(enemy_character)
+                                hero=createCharacter(hero_character,0,user_text)
+                                enemy=createCharacter(enemy_character,1)
                                 hero_healthsprite=HealthSprite(0)
                                 hero_armoursprite=ArmourSprite(0)
                                 hero_damagesprite=DamageSprite(0)
@@ -178,8 +181,8 @@ def main():
                         fightOver=False
                         hero.destroy()
                         enemy.destroy()
-                        hero=createHero(user_text, hero_character)
-                        enemy=createEnemy(enemy_character)
+                        hero=createCharacter(hero_character,0,user_text)
+                        enemy=createCharacter(enemy_character,1)
                         hero_healthsprite=HealthSprite(0)
                         hero_armoursprite=ArmourSprite(0)
                         hero_damagesprite=DamageSprite(0)
@@ -229,7 +232,6 @@ def main():
             if (hero.health<=0):
                 fightOver=True
                 hero.image = pygame.transform.flip(hero.death, True, False)
-                #all_sprites.remove(hero)
                 all_sprites.remove(hero_healthsprite)
                 all_sprites.remove(hero_armoursprite)
                 all_sprites.remove(hero_damagesprite)                                
@@ -267,7 +269,6 @@ def main():
             if (enemy.health<=0):
                 fightOver=True
                 enemy.image = enemy.death
-                #all_sprites.remove(enemy)
                 all_sprites.remove(enemy_healthsprite)
                 all_sprites.remove(enemy_armoursprite)
                 all_sprites.remove(enemy_damagesprite) 
@@ -306,41 +307,21 @@ def main():
         pygame.display.flip()
     pygame.quit()
 
-def createHero(user_text, character_class):
-    if character_class=='Thief':
-        idle='classes/EnemySprites/Enemy1.png'
-        animation_list=[pygame.image.load('classes/EnemySprites/Enemy1.png'),
-                     pygame.image.load('classes/EnemySprites/Enemy2.png'),
-                     pygame.image.load('classes/EnemySprites/Enemy3.png'),
-                     pygame.image.load('classes/EnemySprites/Enemy4.png')]
-        hero=Character(user_text, 50, 30, 15, (0,0), animation_list,idle,0)
-    if character_class=='Warrior':
-        idle='classes/HeroSprites/Hero1.png'
-        animation_list=[pygame.image.load('classes/HeroSprites/Hero1.png'),
-                     pygame.image.load('classes/HeroSprites/Hero2.png'),
-                     pygame.image.load('classes/HeroSprites/Hero3.png'),
-                     pygame.image.load('classes/HeroSprites/Hero4.png')]
-        hero=Character(user_text, 50, 30, 15, (0,0), animation_list, idle,0)
-    all_sprites.add(hero)
-    return hero   
-
-def createEnemy(character_class):
-    if character_class=='Thief':
-        idle='classes/EnemySprites/Enemy1.png'
-        animation_list=[pygame.image.load('classes/EnemySprites/Enemy1.png'),
-                     pygame.image.load('classes/EnemySprites/Enemy2.png'),
-                     pygame.image.load('classes/EnemySprites/Enemy3.png'),
-                     pygame.image.load('classes/EnemySprites/Enemy4.png')]
-        enemy=Character("Вор", 200, 10, 20, (260,0), animation_list,idle,1)
-    if character_class=='Warrior':
-        idle='classes/HeroSprites/Hero1.png'
-        animation_list=[pygame.image.load('classes/HeroSprites/Hero1.png'),
-                     pygame.image.load('classes/HeroSprites/Hero2.png'),
-                     pygame.image.load('classes/HeroSprites/Hero3.png'),
-                     pygame.image.load('classes/HeroSprites/Hero4.png')]
-        enemy=Character("Вор", 200, 10, 20, (260,0), animation_list, idle,1)
-    all_sprites.add(enemy)
-    return enemy 
+def createCharacter(character_class, side, user_text='none'):
+    if user_text=='none':
+        user_text=character_class
+    animation_list=[]
+    idle='classes/'+character_class+'Sprites/'+character_class+'1.png'
+    for i in range(1,4):
+        animation_list.append(pygame.image.load('classes/'+character_class+'Sprites/'+character_class+str(i)+'.png'))
+    if side==0:
+        hero=Character(user_text, 50, 30, 15, (0,0), animation_list, idle,side)
+        all_sprites.add(hero)
+        return hero
+    else:
+        enemy=Character(user_text, 200, 10, 20, (260,0), animation_list, idle,side)
+        all_sprites.add(enemy)
+        return enemy 
 
 if __name__ == '__main__':
     main()
