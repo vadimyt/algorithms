@@ -227,11 +227,11 @@ def main():
                         last_update = current_time
                         if animateHero==False:
                             hero.rect.x -=10
-                            if hero.rect.x==0:
+                            if hero.rect.x<=0:
                                 moveHero=False
                         else:
                             hero.rect.x +=10
-                            if hero.rect.x==190:
+                            if hero.rect.x>=190:
                                 moveHero=False
                 if (animateHero):                
                     if current_time - last_update >= hero_animation_cooldown:
@@ -266,11 +266,11 @@ def main():
                         last_update = current_time
                         if animateEnemy==False:
                             enemy.rect.x +=10
-                            if enemy.rect.x==260:
+                            if enemy.rect.x>=260:
                                 moveEnemy=False
                         else:
                             enemy.rect.x -=10
-                            if enemy.rect.x==80:
+                            if enemy.rect.x<=80:
                                 moveEnemy=False
                 if (animateEnemy):
                     if current_time - last_update >= enemy_animation_cooldown:
