@@ -4,13 +4,14 @@ import random
 import threading
 
 class Character(pygame.sprite.Sprite):
-    def __init__(self, name, health , damage, armour, position, animation_list, idle, side):
+    def __init__(self, name, position, animation_list, idle, side, health=100 , damage=20, armour=15, level=1):
         self.name = name
         self.health = health
         self.damage = damage
         self.armour = armour
         self.animation_list = animation_list
         self.idle = idle
+        self.level = level
         pygame.sprite.Sprite.__init__(self)
         self.death = pygame.image.load('classes/Interface/death.png')
         if side==0:
@@ -22,6 +23,12 @@ class Character(pygame.sprite.Sprite):
 
     def destroy(self):
         self.kill()
+
+    def SetRandomStats(self):
+        self.health=random.randint(0+10*self.level,100+50*self.level)
+        self.damage=random.randint(0+10*self.level,100+50*self.level)
+        self.armour=random.randint(0+10*self.level,100+50*self.level)
+
     def punch(self, enemy):
         enemy.armour = enemy.armour - self.damage
         if enemy.armour<0:
@@ -89,7 +96,7 @@ def main():
 
     pygame.mixer.music.load('classes/Audio/N21_-_peripleumonicis.mp3')
     pygame.mixer.music.set_volume(0.3)
-    pygame.mixer.music.play()
+    pygame.mixer.music.play(loops = -1, fade_ms=5000)
 
     last_update=pygame.time.get_ticks()
     frame=0  
@@ -315,13 +322,15 @@ def createCharacter(character_class, side, user_text='none'):
     for i in range(1,4):
         animation_list.append(pygame.image.load('classes/'+character_class+'Sprites/'+character_class+str(i)+'.png'))
     if side==0:
-        hero=Character(user_text, 50, 30, 15, (0,0), animation_list, idle,side)
+        hero=Character(user_text, (0,0), animation_list, idle, side)
+        hero.SetRandomStats()
         all_sprites.add(hero)
         return hero
     else:
-        enemy=Character(user_text, 200, 10, 20, (260,0), animation_list, idle,side)
+        enemy=Character(user_text, (260,0), animation_list, idle, side)
+        enemy.SetRandomStats()
         all_sprites.add(enemy)
-        return enemy 
+        return enemy
 
 if __name__ == '__main__':
     main()
