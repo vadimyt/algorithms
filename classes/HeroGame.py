@@ -4,16 +4,18 @@ import random
 import threading
 
 class Character(pygame.sprite.Sprite):
-    def __init__(self, name, health , damage, armour, position, image, side):
+    def __init__(self, name, health , damage, armour, position, animation_list, idle, side):
         self.name = name
         self.health = health
         self.damage = damage
-        self.armour = armour      
+        self.armour = armour
+        self.animation_list = animation_list
+        self.idle = idle
         pygame.sprite.Sprite.__init__(self)
         if side==0:
-            self.image = pygame.transform.flip(pygame.image.load(image), True, False)
+            self.image = pygame.transform.flip(pygame.image.load(self.idle), True, False)
         else:
-            self.image = pygame.image.load(image)
+            self.image = pygame.image.load(self.idle)
         self.rect = self.image.get_rect()
         self.rect.topleft = (position)
     def punch(self, enemy):
@@ -77,20 +79,13 @@ BLACK = (0, 0, 0)
 WHITE = (255, 255, 255) 
 all_sprites = pygame.sprite.Group()
 
-hero_animation_list=[pygame.image.load('classes/HeroSprites/Hero1.png'),
-                     pygame.image.load('classes/HeroSprites/Hero2.png'),
-                     pygame.image.load('classes/HeroSprites/Hero3.png'),
-                     pygame.image.load('classes/HeroSprites/Hero4.png')]
 hero_animation_steps=4
 hero_animation_cooldown=75
 
-enemy_animation_list=[pygame.image.load('classes/EnemySprites/Enemy1.png'),
-                     pygame.image.load('classes/EnemySprites/Enemy2.png'),
-                     pygame.image.load('classes/EnemySprites/Enemy3.png'),
-                     pygame.image.load('classes/EnemySprites/Enemy4.png')]
 enemy_animation_steps=4
 enemy_animation_cooldown=75
 move_animation_cooldown=10
+fight_cooldown=600
 
 
 def main():
@@ -120,6 +115,9 @@ def main():
     moveEnemy=False
     moveHero=False
     fightOver=False
+    hero_turn=False
+    enemy_turn=False  
+    pause_game=False
     
     running = True
     while running:
@@ -139,8 +137,8 @@ def main():
                             case pygame.K_BACKSPACE:
                                 user_text=user_text[:-1]
                             case pygame.K_RETURN:
-                                hero=createHero(user_text)
-                                enemy=createEnemy()
+                                hero=createHero(user_text, 'Warrior')
+                                enemy=createEnemy('Warrior')
                                 hero_healthsprite=HealthSprite(0)
                                 hero_armoursprite=ArmourSprite(0)
                                 hero_damagesprite=DamageSprite(0)
@@ -159,12 +157,21 @@ def main():
                                 user_text+=event.unicode
                 else:
                     if fightOver==False:
-                        if event.key==pygame.K_SPACE and animateHero==False and moveHero==False:
-                            animateHero=True
-                            moveHero=True 
-                        if event.key==pygame.K_RETURN and animateEnemy==False and moveEnemy==False :
-                            animateEnemy=True
-                            moveEnemy=True  
+                        if event.key==pygame.K_SPACE and animateHero==False and moveHero==False and enemy_turn==False:
+                            #animateHero=True
+                            #moveHero=True
+                            hero_turn=True
+                        if event.key==pygame.K_RETURN:
+                            #animateEnemy=True
+                            #moveEnemy=True
+                            hero_turn=False
+                            enemy_turn=False
+                        if event.key==pygame.K_BACKSPACE:
+                            if pause_game==False:
+                                pause_game=True
+                            else:
+                                pause_game=False
+
         all_sprites.update()
         screen.fill(WHITE)
         all_sprites.draw(screen)
@@ -182,7 +189,21 @@ def main():
             screen.blit(name_text_surface,(input_rect.x - 250, input_rect.y + 5))
             input_rect.w=max(100,user_text_surface.get_width()+10)
         else:
-            current_time=pygame.time.get_ticks()
+            if pause_game==False:
+                current_time=pygame.time.get_ticks()
+            if current_time - last_update >= fight_cooldown:
+                last_update = current_time
+                if hero_turn and fightOver!=True:
+                    enemy_turn=True
+                    hero_turn=False
+                    animateHero=True
+                    moveHero=True
+                else:
+                    if enemy_turn and fightOver!=True:
+                        enemy_turn=False
+                        hero_turn=True
+                        animateEnemy=True
+                        moveEnemy=True
             if (hero.health<=0):
                 fightOver=True
                 hero_death=DeathSprite(0)
@@ -216,12 +237,12 @@ def main():
                     if current_time - last_update >= hero_animation_cooldown:
                         frame += 1
                         last_update = current_time
-                        if frame >= len(hero_animation_list):
+                        if frame >= len(hero.animation_list):
                             frame=0
                             animateHero=False
                             moveHero=True
                             hero.punch(enemy)
-                        hero.image = pygame.transform.flip(hero_animation_list[frame], True, False)
+                        hero.image = pygame.transform.flip(hero.animation_list[frame], True, False)
             if (enemy.health<=0):
                 fightOver=True
                 enemy_death=DeathSprite(1)
@@ -255,25 +276,51 @@ def main():
                     if current_time - last_update >= enemy_animation_cooldown:
                         frame += 1
                         last_update = current_time
-                        if frame >= len(enemy_animation_list):
+                        if frame >= len(enemy.animation_list):
                             frame=0
                             animateEnemy=False
                             moveEnemy=True
                             enemy.punch(hero)
-                        enemy.image = enemy_animation_list[frame]
+                        enemy.image = enemy.animation_list[frame]
 
         pygame.display.flip()
     pygame.quit()
 
-def createHero(user_text):
-    hero=Character(user_text, 100, 30, 15, (0,0), ('classes/HeroSprites/Hero1.png'),0)
+def createHero(user_text, character_class):
+    if character_class=='Thief':
+        idle='classes/EnemySprites/Enemy1.png'
+        animation_list=[pygame.image.load('classes/EnemySprites/Enemy1.png'),
+                     pygame.image.load('classes/EnemySprites/Enemy2.png'),
+                     pygame.image.load('classes/EnemySprites/Enemy3.png'),
+                     pygame.image.load('classes/EnemySprites/Enemy4.png')]
+        hero=Character(user_text, 100, 30, 15, (0,0), animation_list,idle,0)
+    if character_class=='Warrior':
+        idle='classes/HeroSprites/Hero1.png'
+        animation_list=[pygame.image.load('classes/HeroSprites/Hero1.png'),
+                     pygame.image.load('classes/HeroSprites/Hero2.png'),
+                     pygame.image.load('classes/HeroSprites/Hero3.png'),
+                     pygame.image.load('classes/HeroSprites/Hero4.png')]
+        hero=Character(user_text, 100, 30, 15, (0,0), animation_list, idle,0)
     all_sprites.add(hero)
-    return hero    
+    return hero   
 
-def createEnemy():
-    enemy=Character("Вор", 200, 10, 20, (260,0), ('classes/EnemySprites/Enemy1.png'),1)
+def createEnemy(character_class):
+    if character_class=='Thief':
+        idle='classes/EnemySprites/Enemy1.png'
+        animation_list=[pygame.image.load('classes/EnemySprites/Enemy1.png'),
+                     pygame.image.load('classes/EnemySprites/Enemy2.png'),
+                     pygame.image.load('classes/EnemySprites/Enemy3.png'),
+                     pygame.image.load('classes/EnemySprites/Enemy4.png')]
+        enemy=Character("Вор", 200, 10, 20, (260,0), animation_list,idle,1)
+    if character_class=='Warrior':
+        idle='classes/HeroSprites/Hero1.png'
+        animation_list=[pygame.image.load('classes/HeroSprites/Hero1.png'),
+                     pygame.image.load('classes/HeroSprites/Hero2.png'),
+                     pygame.image.load('classes/HeroSprites/Hero3.png'),
+                     pygame.image.load('classes/HeroSprites/Hero4.png')]
+        enemy=Character("Вор", 200, 10, 20, (260,0), animation_list, idle,1)
     all_sprites.add(enemy)
-    return enemy  
+    return enemy 
 
 if __name__ == '__main__':
     main()
