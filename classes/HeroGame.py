@@ -12,12 +12,16 @@ class Character(pygame.sprite.Sprite):
         self.animation_list = animation_list
         self.idle = idle
         pygame.sprite.Sprite.__init__(self)
+        self.death = pygame.image.load('classes/Interface/death.png')
         if side==0:
             self.image = pygame.transform.flip(pygame.image.load(self.idle), True, False)
         else:
             self.image = pygame.image.load(self.idle)
         self.rect = self.image.get_rect()
         self.rect.topleft = (position)
+
+    def destroy(self):
+        self.kill()
     def punch(self, enemy):
         enemy.armour = enemy.armour - self.damage
         if enemy.armour<0:
@@ -62,16 +66,6 @@ class DamageSprite(pygame.sprite.Sprite):
         else:
             self.rect.topleft = (310,110)
 
-class DeathSprite(pygame.sprite.Sprite):
-    def __init__(self, side):
-        pygame.sprite.Sprite.__init__(self)
-        self.image = pygame.image.load('classes/Interface/death.png')
-        self.rect = self.image.get_rect()
-        if side==0:
-            self.rect.topleft = (0,0)
-        else:
-            self.rect.topleft = (260,0)
-
 WIDTH = 360  # ширина игрового окна
 HEIGHT = 210 # высота игрового окна
 FPS = 60 # частота кадров в секунду
@@ -86,6 +80,9 @@ enemy_animation_steps=4
 enemy_animation_cooldown=75
 move_animation_cooldown=10
 fight_cooldown=600
+
+hero_character='Warrior'
+enemy_character='Thief'
 
 
 def main():
@@ -137,8 +134,8 @@ def main():
                             case pygame.K_BACKSPACE:
                                 user_text=user_text[:-1]
                             case pygame.K_RETURN:
-                                hero=createHero(user_text, 'Warrior')
-                                enemy=createEnemy('Warrior')
+                                hero=createHero(user_text, hero_character)
+                                enemy=createEnemy(enemy_character)
                                 hero_healthsprite=HealthSprite(0)
                                 hero_armoursprite=ArmourSprite(0)
                                 hero_damagesprite=DamageSprite(0)
@@ -171,6 +168,31 @@ def main():
                                 pause_game=True
                             else:
                                 pause_game=False
+                    if event.key==pygame.K_r:
+                        hero_turn=False
+                        enemy_turn=False
+                        animateHero=False
+                        animateEnemy=False
+                        moveHero=False
+                        moveEnemy=False
+                        fightOver=False
+                        hero.destroy()
+                        enemy.destroy()
+                        hero=createHero(user_text, hero_character)
+                        enemy=createEnemy(enemy_character)
+                        hero_healthsprite=HealthSprite(0)
+                        hero_armoursprite=ArmourSprite(0)
+                        hero_damagesprite=DamageSprite(0)
+                        all_sprites.add(hero_healthsprite)
+                        all_sprites.add(hero_armoursprite)
+                        all_sprites.add(hero_damagesprite)
+
+                        enemy_healthsprite=HealthSprite(1)
+                        enemy_armoursprite=ArmourSprite(1)
+                        enemy_damagesprite=DamageSprite(1)
+                        all_sprites.add(enemy_healthsprite)
+                        all_sprites.add(enemy_armoursprite)
+                        all_sprites.add(enemy_damagesprite)
 
         all_sprites.update()
         screen.fill(WHITE)
@@ -206,9 +228,8 @@ def main():
                         moveEnemy=True
             if (hero.health<=0):
                 fightOver=True
-                hero_death=DeathSprite(0)
-                all_sprites.add(hero_death)
-                all_sprites.remove(hero)
+                hero.image = pygame.transform.flip(hero.death, True, False)
+                #all_sprites.remove(hero)
                 all_sprites.remove(hero_healthsprite)
                 all_sprites.remove(hero_armoursprite)
                 all_sprites.remove(hero_damagesprite)                                
@@ -245,9 +266,8 @@ def main():
                         hero.image = pygame.transform.flip(hero.animation_list[frame], True, False)
             if (enemy.health<=0):
                 fightOver=True
-                enemy_death=DeathSprite(1)
-                all_sprites.add(enemy_death)
-                all_sprites.remove(enemy)
+                enemy.image = enemy.death
+                #all_sprites.remove(enemy)
                 all_sprites.remove(enemy_healthsprite)
                 all_sprites.remove(enemy_armoursprite)
                 all_sprites.remove(enemy_damagesprite) 
@@ -293,14 +313,14 @@ def createHero(user_text, character_class):
                      pygame.image.load('classes/EnemySprites/Enemy2.png'),
                      pygame.image.load('classes/EnemySprites/Enemy3.png'),
                      pygame.image.load('classes/EnemySprites/Enemy4.png')]
-        hero=Character(user_text, 100, 30, 15, (0,0), animation_list,idle,0)
+        hero=Character(user_text, 50, 30, 15, (0,0), animation_list,idle,0)
     if character_class=='Warrior':
         idle='classes/HeroSprites/Hero1.png'
         animation_list=[pygame.image.load('classes/HeroSprites/Hero1.png'),
                      pygame.image.load('classes/HeroSprites/Hero2.png'),
                      pygame.image.load('classes/HeroSprites/Hero3.png'),
                      pygame.image.load('classes/HeroSprites/Hero4.png')]
-        hero=Character(user_text, 100, 30, 15, (0,0), animation_list, idle,0)
+        hero=Character(user_text, 50, 30, 15, (0,0), animation_list, idle,0)
     all_sprites.add(hero)
     return hero   
 
