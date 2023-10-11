@@ -12,9 +12,11 @@ class Character(pygame.sprite.Sprite):
         self.animation_list = animation_list
         self.idle = idle
         self.level = level
+        self.side = side
         pygame.sprite.Sprite.__init__(self)
-        self.death = pygame.image.load('classes/Interface/death.png')
-        if side==0:
+        self.death_animation_list = [pygame.image.load('classes/Interface/death1.png'),
+                                     pygame.image.load('classes/Interface/death2.png')]
+        if self.side==0:
             self.image = pygame.transform.flip(pygame.image.load(self.idle), True, False)
         else:
             self.image = pygame.image.load(self.idle)
@@ -34,6 +36,11 @@ class Character(pygame.sprite.Sprite):
         if enemy.armour<0:
             enemy.health = enemy.health + enemy.armour
             enemy.armour = 0
+        if enemy.health <=0:
+            if enemy.side==0:
+                enemy.image = pygame.transform.flip(enemy.death_animation_list[0], True, False)
+            else:
+                enemy.image = enemy.death_animation_list[0]
 
 class Screen_devider(pygame.sprite.Sprite):
     def __init__(self):
@@ -42,6 +49,8 @@ class Screen_devider(pygame.sprite.Sprite):
         self.image.fill(BLACK)
         self.rect = self.image.get_rect()
         self.rect.topleft = (0,100)
+    def destroy(self):
+        self.kill()
 
 class HealthSprite(pygame.sprite.Sprite):
     def __init__(self, side):
@@ -52,6 +61,8 @@ class HealthSprite(pygame.sprite.Sprite):
             self.rect.topleft = (0,110)
         else:
             self.rect.topleft = (210,110)
+    def destroy(self):
+        self.kill()
 
 class ArmourSprite(pygame.sprite.Sprite):
     def __init__(self, side):
@@ -62,6 +73,8 @@ class ArmourSprite(pygame.sprite.Sprite):
             self.rect.topleft = (50,110)
         else:
             self.rect.topleft = (260,110)
+    def destroy(self):
+        self.kill()
 
 class DamageSprite(pygame.sprite.Sprite):
     def __init__(self, side):
@@ -72,6 +85,8 @@ class DamageSprite(pygame.sprite.Sprite):
             self.rect.topleft = (100,110)
         else:
             self.rect.topleft = (310,110)
+    def destroy(self):
+        self.kill()
 
 WIDTH = 360  # ширина игрового окна
 HEIGHT = 210 # высота игрового окна
@@ -80,12 +95,11 @@ BLACK = (0, 0, 0)
 WHITE = (255, 255, 255) 
 all_sprites = pygame.sprite.Group()
 
-hero_animation_steps=4
 hero_animation_cooldown=75
-
-enemy_animation_steps=4
 enemy_animation_cooldown=75
 move_animation_cooldown=10
+death_animation_cooldown=500
+
 fight_cooldown=600
 
 hero_character='Thief'
@@ -165,12 +179,8 @@ def main():
                 else:
                     if fightOver==False:
                         if event.key==pygame.K_SPACE and animateHero==False and moveHero==False and enemy_turn==False:
-                            #animateHero=True
-                            #moveHero=True
                             hero_turn=True
                         if event.key==pygame.K_RETURN:
-                            #animateEnemy=True
-                            #moveEnemy=True
                             hero_turn=False
                             enemy_turn=False
                         if event.key==pygame.K_BACKSPACE:
@@ -190,6 +200,9 @@ def main():
                         enemy.destroy()
                         hero=createCharacter(hero_character,0,user_text)
                         enemy=createCharacter(enemy_character,1)
+                        hero_healthsprite.destroy()
+                        hero_armoursprite.destroy()
+                        hero_damagesprite.destroy()
                         hero_healthsprite=HealthSprite(0)
                         hero_armoursprite=ArmourSprite(0)
                         hero_damagesprite=DamageSprite(0)
@@ -197,6 +210,9 @@ def main():
                         all_sprites.add(hero_armoursprite)
                         all_sprites.add(hero_damagesprite)
 
+                        enemy_healthsprite.destroy()
+                        enemy_armoursprite.destroy()
+                        enemy_damagesprite.destroy()
                         enemy_healthsprite=HealthSprite(1)
                         enemy_armoursprite=ArmourSprite(1)
                         enemy_damagesprite=DamageSprite(1)
@@ -237,11 +253,16 @@ def main():
                         animateEnemy=True
                         moveEnemy=True
             if (hero.health<=0):
-                fightOver=True
-                hero.image = pygame.transform.flip(hero.death, True, False)
-                all_sprites.remove(hero_healthsprite)
-                all_sprites.remove(hero_armoursprite)
-                all_sprites.remove(hero_damagesprite)                                
+                fightOver=True                
+                if current_time - last_update >= death_animation_cooldown:
+                    frame += 1
+                    last_update = current_time
+                    if frame >= len(hero.death_animation_list):
+                        frame=0
+                    hero.image = pygame.transform.flip(hero.death_animation_list[frame], True, False)
+                hero_healthsprite.destroy()
+                hero_armoursprite.destroy()
+                hero_damagesprite.destroy()                               
             else:
                 hero_health_text=str(hero.health)
                 hero_armour_text=str(hero.armour)
@@ -275,10 +296,15 @@ def main():
                         hero.image = pygame.transform.flip(hero.animation_list[frame], True, False)
             if (enemy.health<=0):
                 fightOver=True
-                enemy.image = enemy.death
-                all_sprites.remove(enemy_healthsprite)
-                all_sprites.remove(enemy_armoursprite)
-                all_sprites.remove(enemy_damagesprite) 
+                if current_time - last_update >= death_animation_cooldown:
+                    frame += 1
+                    last_update = current_time
+                    if frame >= len(enemy.death_animation_list):
+                        frame=0
+                    enemy.image = enemy.death_animation_list[frame]
+                enemy_healthsprite.destroy()
+                enemy_armoursprite.destroy()
+                enemy_damagesprite.destroy() 
             else:
                 enemy_health_text=str(enemy.health)
                 enemy_armour_text=str(enemy.armour)
