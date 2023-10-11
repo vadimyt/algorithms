@@ -90,7 +90,7 @@ enemy_animation_list=[pygame.image.load('classes/EnemySprites/Enemy1.png'),
                      pygame.image.load('classes/EnemySprites/Enemy4.png')]
 enemy_animation_steps=4
 enemy_animation_cooldown=75
-move_animation_cooldown=15
+move_animation_cooldown=10
 
 
 def main():
@@ -119,6 +119,7 @@ def main():
     animateEnemy=False
     moveEnemy=False
     moveHero=False
+    fightOver=False
     
     running = True
     while running:
@@ -157,12 +158,13 @@ def main():
                             case _:
                                 user_text+=event.unicode
                 else:
-                    if event.key==pygame.K_SPACE:
-                        animateHero=True
-                        moveHero=True 
-                    if event.key==pygame.K_RETURN:
-                        animateEnemy=True
-                        moveEnemy=True  
+                    if fightOver==False:
+                        if event.key==pygame.K_SPACE and animateHero==False and moveHero==False:
+                            animateHero=True
+                            moveHero=True 
+                        if event.key==pygame.K_RETURN and animateEnemy==False and moveEnemy==False :
+                            animateEnemy=True
+                            moveEnemy=True  
         all_sprites.update()
         screen.fill(WHITE)
         all_sprites.draw(screen)
@@ -181,7 +183,8 @@ def main():
             input_rect.w=max(100,user_text_surface.get_width()+10)
         else:
             current_time=pygame.time.get_ticks()
-            if (hero.health<0):
+            if (hero.health<=0):
+                fightOver=True
                 hero_death=DeathSprite(0)
                 all_sprites.add(hero_death)
                 all_sprites.remove(hero)
@@ -198,8 +201,29 @@ def main():
                 screen.blit(hero_armour_text_surface,(50, 160))
                 hero_damage_text_surface=base_font.render(hero_damage_text,True,(BLACK))
                 screen.blit(hero_damage_text_surface,(100, 160))
-
-            if (enemy.health<0):
+                if (moveHero):
+                    if current_time - last_update >= move_animation_cooldown:
+                        last_update = current_time
+                        if animateHero==False:
+                            hero.rect.x -=10
+                            if hero.rect.x==0:
+                                moveHero=False
+                        else:
+                            hero.rect.x +=10
+                            if hero.rect.x==190:
+                                moveHero=False
+                if (animateHero):                
+                    if current_time - last_update >= hero_animation_cooldown:
+                        frame += 1
+                        last_update = current_time
+                        if frame >= len(hero_animation_list):
+                            frame=0
+                            animateHero=False
+                            moveHero=True
+                            hero.punch(enemy)
+                        hero.image = pygame.transform.flip(hero_animation_list[frame], True, False)
+            if (enemy.health<=0):
+                fightOver=True
                 enemy_death=DeathSprite(1)
                 all_sprites.add(enemy_death)
                 all_sprites.remove(enemy)
@@ -216,48 +240,27 @@ def main():
                 screen.blit(enemy_armour_text_surface,(260, 160))
                 enemy_damage_text_surface=base_font.render(enemy_damage_text,True,(BLACK))
                 screen.blit(enemy_damage_text_surface,(310, 160)) 
-            if (moveHero):
-                if current_time - last_update >= move_animation_cooldown:
-                    last_update = current_time
-                    if animateHero==False:
-                        hero.rect.x -=5
-                        if hero.rect.x==0:
-                            moveHero=False
-                    else:
-                        hero.rect.x +=5
-                        if hero.rect.x==190:
-                            moveHero=False
-            if (animateHero):                
-                if current_time - last_update >= hero_animation_cooldown:
-                    frame += 1
-                    last_update = current_time
-                    if frame >= len(hero_animation_list):
-                        frame=0
-                        animateHero=False
-                        moveHero=True
-                        hero.punch(enemy)
-                    hero.image = pygame.transform.flip(hero_animation_list[frame], True, False)
-            if (moveEnemy):
-                if current_time - last_update >= move_animation_cooldown:
-                    last_update = current_time
-                    if animateEnemy==False:
-                        enemy.rect.x +=5
-                        if enemy.rect.x==260:
-                            moveEnemy=False
-                    else:
-                        enemy.rect.x -=5
-                        if enemy.rect.x==80:
-                            moveEnemy=False
-            if (animateEnemy):
-                if current_time - last_update >= enemy_animation_cooldown:
-                    frame += 1
-                    last_update = current_time
-                    if frame >= len(enemy_animation_list):
-                        frame=0
-                        animateEnemy=False
-                        moveEnemy=True
-                        enemy.punch(hero)
-                    enemy.image = enemy_animation_list[frame]
+                if (moveEnemy):
+                    if current_time - last_update >= move_animation_cooldown:
+                        last_update = current_time
+                        if animateEnemy==False:
+                            enemy.rect.x +=10
+                            if enemy.rect.x==260:
+                                moveEnemy=False
+                        else:
+                            enemy.rect.x -=10
+                            if enemy.rect.x==80:
+                                moveEnemy=False
+                if (animateEnemy):
+                    if current_time - last_update >= enemy_animation_cooldown:
+                        frame += 1
+                        last_update = current_time
+                        if frame >= len(enemy_animation_list):
+                            frame=0
+                            animateEnemy=False
+                            moveEnemy=True
+                            enemy.punch(hero)
+                        enemy.image = enemy_animation_list[frame]
 
         pygame.display.flip()
     pygame.quit()
