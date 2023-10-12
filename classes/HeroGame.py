@@ -42,51 +42,62 @@ class Character(pygame.sprite.Sprite):
             else:
                 enemy.image = enemy.death_animation_list[0]
 
-class Screen_devider(pygame.sprite.Sprite):
-    def __init__(self):
-        pygame.sprite.Sprite.__init__(self)
-        self.image = pygame.Surface((360, 10))
-        self.image.fill(BLACK)
-        self.rect = self.image.get_rect()
-        self.rect.topleft = (0,100)
-    def destroy(self):
-        self.kill()
+class UI():
+    class Text(pygame.sprite.Sprite):
+        def __init__(self, text, position):
+            base_font=pygame.font.Font(None,28)
+            pygame.sprite.Sprite.__init__(self)
+            self.image=base_font.render(str(text),True,(BLACK))
+            self.rect=self.image.get_rect()
+            self.rect.topleft=position
+            
+        def destroy(self):
+            self.kill()
+    class Screen_devider(pygame.sprite.Sprite):
+        def __init__(self):
+            pygame.sprite.Sprite.__init__(self)
+            self.image = pygame.Surface((360, 10))
+            self.image.fill(BLACK)
+            self.rect = self.image.get_rect()
+            self.rect.topleft = (0,100)
+        def destroy(self):
+            self.kill()
 
-class HealthSprite(pygame.sprite.Sprite):
-    def __init__(self, side):
-        pygame.sprite.Sprite.__init__(self)
-        self.image = pygame.image.load('classes/Interface/health.png')
-        self.rect = self.image.get_rect()
-        if side==0:
-            self.rect.topleft = (0,110)
-        else:
-            self.rect.topleft = (210,110)
-    def destroy(self):
-        self.kill()
+    class HealthSprite(pygame.sprite.Sprite):
+        def __init__(self, side):
+            pygame.sprite.Sprite.__init__(self)
+            self.image = pygame.image.load('classes/Interface/health.png')
+            self.rect = self.image.get_rect()            
+            if side==0:
+                self.rect.topleft = (0,110)
+            else:
+                self.rect.topleft = (210,110)
+        def destroy(self):
+            self.kill()
 
-class ArmourSprite(pygame.sprite.Sprite):
-    def __init__(self, side):
-        pygame.sprite.Sprite.__init__(self)
-        self.image = pygame.image.load('classes/Interface/armour.png')
-        self.rect = self.image.get_rect()
-        if side==0:
-            self.rect.topleft = (50,110)
-        else:
-            self.rect.topleft = (260,110)
-    def destroy(self):
-        self.kill()
+    class ArmourSprite(pygame.sprite.Sprite):
+        def __init__(self, side):
+            pygame.sprite.Sprite.__init__(self)
+            self.image = pygame.image.load('classes/Interface/armour.png')
+            self.rect = self.image.get_rect()
+            if side==0:
+                self.rect.topleft = (50,110)
+            else:
+                self.rect.topleft = (260,110)
+        def destroy(self):
+            self.kill()
 
-class DamageSprite(pygame.sprite.Sprite):
-    def __init__(self, side):
-        pygame.sprite.Sprite.__init__(self)
-        self.image = pygame.image.load('classes/Interface/damage.png')
-        self.rect = self.image.get_rect()
-        if side==0:
-            self.rect.topleft = (100,110)
-        else:
-            self.rect.topleft = (310,110)
-    def destroy(self):
-        self.kill()
+    class DamageSprite(pygame.sprite.Sprite):
+        def __init__(self, side):
+            pygame.sprite.Sprite.__init__(self)
+            self.image = pygame.image.load('classes/Interface/damage.png')
+            self.rect = self.image.get_rect()
+            if side==0:
+                self.rect.topleft = (100,110)
+            else:
+                self.rect.topleft = (310,110)
+        def destroy(self):
+            self.kill()
 
 WIDTH = 360  # ширина игрового окна
 HEIGHT = 210 # высота игрового окна
@@ -128,7 +139,7 @@ def main():
     user_text_active=False
     start_screen_active=True
 
-    sceen_devider=Screen_devider()
+    sceen_devider=UI.Screen_devider()
     all_sprites.add(sceen_devider)
 
     animateHero=False
@@ -160,19 +171,21 @@ def main():
                             case pygame.K_RETURN:
                                 hero=createCharacter(hero_character,0,user_text)
                                 enemy=createCharacter(enemy_character,1)
-                                hero_healthsprite=HealthSprite(0)
-                                hero_armoursprite=ArmourSprite(0)
-                                hero_damagesprite=DamageSprite(0)
-                                all_sprites.add(hero_healthsprite)
-                                all_sprites.add(hero_armoursprite)
-                                all_sprites.add(hero_damagesprite)
+                                hero_ui=[UI.HealthSprite(0),
+                                         UI.ArmourSprite(0),
+                                         UI.DamageSprite(0),
+                                         UI.Text(hero.health,(0, 160)),
+                                         UI.Text(hero.armour,(50, 160)),
+                                         UI.Text(hero.damage,(100, 160))]
+                                all_sprites.add(hero_ui)
 
-                                enemy_healthsprite=HealthSprite(1)
-                                enemy_armoursprite=ArmourSprite(1)
-                                enemy_damagesprite=DamageSprite(1)
-                                all_sprites.add(enemy_healthsprite)
-                                all_sprites.add(enemy_armoursprite)
-                                all_sprites.add(enemy_damagesprite)
+                                enemy_ui=[UI.HealthSprite(1),
+                                          UI.ArmourSprite(1),
+                                          UI.DamageSprite(1),
+                                          UI.Text(enemy.health,(210, 160)),
+                                          UI.Text(enemy.armour,(260, 160)),
+                                          UI.Text(enemy.damage,(310, 160))]  
+                                all_sprites.add(enemy_ui)
                                 start_screen_active=False
                             case _:
                                 user_text+=event.unicode
@@ -200,25 +213,23 @@ def main():
                         enemy.destroy()
                         hero=createCharacter(hero_character,0,user_text)
                         enemy=createCharacter(enemy_character,1)
-                        hero_healthsprite.destroy()
-                        hero_armoursprite.destroy()
-                        hero_damagesprite.destroy()
-                        hero_healthsprite=HealthSprite(0)
-                        hero_armoursprite=ArmourSprite(0)
-                        hero_damagesprite=DamageSprite(0)
-                        all_sprites.add(hero_healthsprite)
-                        all_sprites.add(hero_armoursprite)
-                        all_sprites.add(hero_damagesprite)
-
-                        enemy_healthsprite.destroy()
-                        enemy_armoursprite.destroy()
-                        enemy_damagesprite.destroy()
-                        enemy_healthsprite=HealthSprite(1)
-                        enemy_armoursprite=ArmourSprite(1)
-                        enemy_damagesprite=DamageSprite(1)
-                        all_sprites.add(enemy_healthsprite)
-                        all_sprites.add(enemy_armoursprite)
-                        all_sprites.add(enemy_damagesprite)
+                        for i in range(6):
+                            hero_ui[i].destroy()
+                            enemy_ui[i].destroy()
+                        hero_ui=[UI.HealthSprite(0),
+                                 UI.ArmourSprite(0),
+                                 UI.DamageSprite(0),
+                                 UI.Text(hero.health,(0, 160)),
+                                 UI.Text(hero.armour,(50, 160)),
+                                 UI.Text(hero.damage,(100, 160))]
+                        all_sprites.add(hero_ui)
+                        enemy_ui=[UI.HealthSprite(1),
+                                  UI.ArmourSprite(1),
+                                  UI.DamageSprite(1),
+                                  UI.Text(enemy.health,(210, 160)),
+                                  UI.Text(enemy.armour,(260, 160)),
+                                  UI.Text(enemy.damage,(310, 160))] 
+                        all_sprites.add(enemy_ui)
 
         all_sprites.update()
         screen.fill(WHITE)
@@ -259,20 +270,8 @@ def main():
                     last_update = current_time
                     if frame >= len(hero.death_animation_list):
                         frame=0
-                    hero.image = pygame.transform.flip(hero.death_animation_list[frame], True, False)
-                hero_healthsprite.destroy()
-                hero_armoursprite.destroy()
-                hero_damagesprite.destroy()                               
+                    hero.image = pygame.transform.flip(hero.death_animation_list[frame], True, False)                           
             else:
-                hero_health_text=str(hero.health)
-                hero_armour_text=str(hero.armour)
-                hero_damage_text=str(hero.damage)
-                hero_health_text_surface=base_font.render(hero_health_text,True,(BLACK))
-                screen.blit(hero_health_text_surface,(0, 160))
-                hero_armour_text_surface=base_font.render(hero_armour_text,True,(BLACK))
-                screen.blit(hero_armour_text_surface,(50, 160))
-                hero_damage_text_surface=base_font.render(hero_damage_text,True,(BLACK))
-                screen.blit(hero_damage_text_surface,(100, 160))
                 if (moveHero):
                     if current_time - last_update >= move_animation_cooldown:
                         last_update = current_time
@@ -293,6 +292,16 @@ def main():
                             animateHero=False
                             moveHero=True
                             hero.punch(enemy)
+                            for i in range(6):                            
+                                    enemy_ui[i].destroy()
+                            if enemy.health>0:                                
+                                enemy_ui=[UI.HealthSprite(1),
+                                    UI.ArmourSprite(1),
+                                    UI.DamageSprite(1),
+                                    UI.Text(enemy.health,(210, 160)),
+                                    UI.Text(enemy.armour,(260, 160)),
+                                    UI.Text(enemy.damage,(310, 160))] 
+                                all_sprites.add(enemy_ui)
                         hero.image = pygame.transform.flip(hero.animation_list[frame], True, False)
             if (enemy.health<=0):
                 fightOver=True
@@ -302,19 +311,7 @@ def main():
                     if frame >= len(enemy.death_animation_list):
                         frame=0
                     enemy.image = enemy.death_animation_list[frame]
-                enemy_healthsprite.destroy()
-                enemy_armoursprite.destroy()
-                enemy_damagesprite.destroy() 
-            else:
-                enemy_health_text=str(enemy.health)
-                enemy_armour_text=str(enemy.armour)
-                enemy_damage_text=str(enemy.damage)            
-                enemy_health_text_surface=base_font.render(enemy_health_text,True,(BLACK))
-                screen.blit(enemy_health_text_surface,(210, 160))
-                enemy_armour_text_surface=base_font.render(enemy_armour_text,True,(BLACK))
-                screen.blit(enemy_armour_text_surface,(260, 160))
-                enemy_damage_text_surface=base_font.render(enemy_damage_text,True,(BLACK))
-                screen.blit(enemy_damage_text_surface,(310, 160)) 
+            else:                     
                 if (moveEnemy):
                     if current_time - last_update >= move_animation_cooldown:
                         last_update = current_time
@@ -335,6 +332,16 @@ def main():
                             animateEnemy=False
                             moveEnemy=True
                             enemy.punch(hero)
+                            for i in range(6):
+                                    hero_ui[i].destroy()
+                            if hero.health>0:
+                                hero_ui=[UI.HealthSprite(0),
+                                            UI.ArmourSprite(0),
+                                            UI.DamageSprite(0),
+                                            UI.Text(hero.health,(0, 160)),
+                                            UI.Text(hero.armour,(50, 160)),
+                                            UI.Text(hero.damage,(100, 160))]
+                                all_sprites.add(hero_ui)
                         enemy.image = enemy.animation_list[frame]
 
         pygame.display.flip()
