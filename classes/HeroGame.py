@@ -115,8 +115,7 @@ death_animation_cooldown=500
 
 fight_cooldown=600
 
-hero_character='Knight'
-enemy_character='Thief'
+character_list=['Knight', 'Thief', 'NecoArc', 'Masuna']
 
 def main():
     pygame.mixer.pre_init(44100, -16, 1, 512)
@@ -192,8 +191,8 @@ def main():
                             case pygame.K_BACKSPACE:
                                 user_text=user_text[:-1]
                             case pygame.K_RETURN:
-                                hero=createCharacter(hero_character,0,user_text)
-                                enemy=createCharacter(enemy_character,1)
+                                hero=createCharacter(0, random.randint(0,len(character_list)-1), user_text=user_text)
+                                enemy=createCharacter(1, random.randint(0,len(character_list)-1))
                                 hero_ui=[UI.HealthSprite(0),
                                          UI.ArmourSprite(0),
                                          UI.DamageSprite(0),
@@ -235,8 +234,8 @@ def main():
                         fightOver=False
                         hero.destroy()
                         enemy.destroy()
-                        hero=createCharacter(hero_character,0,user_text)
-                        enemy=createCharacter(enemy_character,1)
+                        hero=createCharacter(0,random.randint(0,len(character_list)-1),user_text)
+                        enemy=createCharacter(1,random.randint(0,len(character_list)-1))
                         for i in range(6):
                             hero_ui[i].destroy()
                             enemy_ui[i].destroy()
@@ -383,7 +382,8 @@ def main():
         pygame.display.flip()
     pygame.quit()
 
-def createCharacter(character_class, side, user_text='none'):
+def createCharacter(side, character_int=99, user_text='none'):
+    character_class=character_list[character_int]
     if user_text=='none':
         user_text=character_class
     animation_list=[]
