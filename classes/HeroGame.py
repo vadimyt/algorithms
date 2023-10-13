@@ -1,18 +1,22 @@
+import os
 import time
 import pygame
 import random
 import threading
 
 class Character(pygame.sprite.Sprite):
-    def __init__(self, name, position, animation_list, idle, side, health=100 , damage=20, armour=15, level=1):
+    def __init__(self, name, position, sound_list, animation_list, idle, side, need_move=False, health=100 , damage=20, armour=15, level=1):
         self.name = name
         self.health = health
         self.damage = damage
         self.armour = armour
-        self.animation_list = animation_list
+        self.sound_list = sound_list
+        self.animation_list = animation_list        
         self.idle = idle
         self.level = level
         self.side = side
+        self.need_move=need_move
+        self.animation_cooldown=300/len(animation_list)
         pygame.sprite.Sprite.__init__(self)
         self.death_animation_list = [pygame.image.load('classes/Interface/death1.png'),
                                      pygame.image.load('classes/Interface/death2.png')]
@@ -27,9 +31,9 @@ class Character(pygame.sprite.Sprite):
         self.kill()
 
     def SetRandomStats(self):
-        self.health=random.randint(0+10*self.level,100+50*self.level)
-        self.damage=random.randint(0+10*self.level,100+50*self.level)
-        self.armour=random.randint(0+10*self.level,100+50*self.level)
+        self.health=random.randint(0+50*self.level,100+50*self.level)
+        self.damage=random.randint(0+50*self.level,100+50*self.level)
+        self.armour=random.randint(0+50*self.level,100+50*self.level)
 
     def punch(self, enemy):
         enemy.armour = enemy.armour - self.damage
@@ -100,26 +104,29 @@ class UI():
             self.kill()
 
 WIDTH = 360  # ширина игрового окна
-HEIGHT = 210 # высота игрового окна
+HEIGHT = 360 # высота игрового окна
 FPS = 60 # частота кадров в секунду
 BLACK = (0, 0, 0)   
 WHITE = (255, 255, 255) 
 all_sprites = pygame.sprite.Group()
 
-hero_animation_cooldown=75
-enemy_animation_cooldown=75
 move_animation_cooldown=10
 death_animation_cooldown=500
 
 fight_cooldown=600
 
-hero_character='Thief'
-enemy_character='Knight'
+hero_character='Knight'
+enemy_character='Thief'
 
 def main():
+    pygame.mixer.pre_init(44100, -16, 1, 512)
     pygame.init()
 
-    pygame.mixer.music.load('classes/Audio/N21_-_peripleumonicis.mp3')
+    music=['classes/Audio/music/N21_-_peripleumonicis.mp3','classes/Audio/music/N14_-_evil_mage_theme.mp3']
+    curtrack=random.randint(0,len(music)-1)
+    ha_sound = pygame.mixer.Sound('classes/Audio/sounds/ha.mp3')
+    ha_sound.set_volume(0.3)
+    pygame.mixer.music.load(music[curtrack])
     pygame.mixer.music.set_volume(0.3)
     pygame.mixer.music.play(loops = -1, fade_ms=5000)
 
@@ -150,6 +157,7 @@ def main():
     hero_turn=False
     enemy_turn=False  
     pause_game=False
+    music_pause=False
     
     running = True
     while running:
@@ -163,6 +171,21 @@ def main():
                 else:
                     user_text_active=False
             if event.type==pygame.KEYDOWN:
+                if user_text_active==False or start_screen_active==False:
+                    if event.key==pygame.K_m:
+                            if music_pause==False:
+                                music_pause=True
+                                pygame.mixer.music.pause()
+                            else:
+                                music_pause=False
+                                pygame.mixer.music.unpause()
+                    if event.key==pygame.K_p:                        
+                        if curtrack==(len(music)-1):
+                            curtrack=0
+                        else:
+                            curtrack+=1
+                        pygame.mixer.music.load(music[curtrack])
+                        pygame.mixer.music.play(loops = -1, fade_ms=5000)
                 if start_screen_active==True:
                     if user_text_active==True:
                         match event.key:
@@ -202,6 +225,7 @@ def main():
                             else:
                                 pause_game=False
                     if event.key==pygame.K_r:
+                        frame=0
                         hero_turn=False
                         enemy_turn=False
                         animateHero=False
@@ -229,7 +253,7 @@ def main():
                                   UI.Text(enemy.health,(210, 160)),
                                   UI.Text(enemy.armour,(260, 160)),
                                   UI.Text(enemy.damage,(310, 160))] 
-                        all_sprites.add(enemy_ui)
+                        all_sprites.add(enemy_ui)                    
 
         all_sprites.update()
         screen.fill(WHITE)
@@ -248,7 +272,7 @@ def main():
             screen.blit(name_text_surface,(input_rect.x - 250, input_rect.y + 5))
             input_rect.w=max(100,user_text_surface.get_width()+10)
         else:
-            if pause_game==False:
+            if pause_game!=True:
                 current_time=pygame.time.get_ticks()
             if current_time - last_update >= fight_cooldown:
                 last_update = current_time
@@ -270,9 +294,11 @@ def main():
                     last_update = current_time
                     if frame >= len(hero.death_animation_list):
                         frame=0
-                    hero.image = pygame.transform.flip(hero.death_animation_list[frame], True, False)                           
+                    hero.image = pygame.transform.flip(hero.death_animation_list[frame], True, False)
+                    if frame==1:
+                        ha_sound.play()                           
             else:
-                if (moveHero):
+                if (moveHero and hero.need_move):
                     if current_time - last_update >= move_animation_cooldown:
                         last_update = current_time
                         if animateHero==False:
@@ -283,8 +309,12 @@ def main():
                             hero.rect.x +=10
                             if hero.rect.x>=190:
                                 moveHero=False
+                else:
+                    moveHero=False
                 if (animateHero):                
-                    if current_time - last_update >= hero_animation_cooldown:
+                    if current_time - last_update >= hero.animation_cooldown:
+                        if frame==0:
+                            hero.sound_list[random.randint(0,len(hero.sound_list)-1)].play()
                         frame += 1
                         last_update = current_time
                         if frame >= len(hero.animation_list):
@@ -311,8 +341,10 @@ def main():
                     if frame >= len(enemy.death_animation_list):
                         frame=0
                     enemy.image = enemy.death_animation_list[frame]
+                    if frame==1:
+                        ha_sound.play()
             else:                     
-                if (moveEnemy):
+                if (moveEnemy and enemy.need_move):
                     if current_time - last_update >= move_animation_cooldown:
                         last_update = current_time
                         if animateEnemy==False:
@@ -323,8 +355,12 @@ def main():
                             enemy.rect.x -=10
                             if enemy.rect.x<=80:
                                 moveEnemy=False
+                else:
+                    moveEnemy=False
                 if (animateEnemy):
-                    if current_time - last_update >= enemy_animation_cooldown:
+                    if current_time - last_update >= enemy.animation_cooldown:
+                        if frame==0:
+                            enemy.sound_list[random.randint(0,len(enemy.sound_list)-1)].play()
                         frame += 1
                         last_update = current_time
                         if frame >= len(enemy.animation_list):
@@ -351,16 +387,37 @@ def createCharacter(character_class, side, user_text='none'):
     if user_text=='none':
         user_text=character_class
     animation_list=[]
-    idle='classes/'+character_class+'Sprites/'+character_class+'1.png'
-    for i in range(1,4):
-        animation_list.append(pygame.image.load('classes/'+character_class+'Sprites/'+character_class+str(i)+'.png'))
+    sound_list=[]    
+    try:
+        lst=os.listdir('classes/'+character_class+'Sprites/')
+        for i in range(0,len(lst)):            
+            if i==0:
+                idle='classes/'+character_class+'Sprites/'+lst[i]                
+            animation_list.append(pygame.image.load('classes/'+character_class+'Sprites/'+lst[i]))
+    except FileNotFoundError:
+        lst=os.listdir('classes/DefaultSprites/')
+        for i in range(0,len(lst)):
+            if i==0:
+                idle='classes/DefaultSprites/'+lst[i]
+            animation_list.append(pygame.image.load('classes/DefaultSprites/'+lst[i]))
+    try:
+        lst=os.listdir('classes/Audio/attacksounds/'+character_class+'SoundEffects/')
+        for i in range(0,len(lst)):
+            sound_list.append(pygame.mixer.Sound('classes/Audio/attacksounds/'+character_class+'SoundEffects/'+lst[i]))
+            sound_list[i].set_volume(0.3)
+    except FileNotFoundError:
+        lst=os.listdir('classes/Audio/attacksounds/DefaultSoundEffects/')
+        for i in range(0,len(lst)):
+            sound_list.append(pygame.mixer.Sound('classes/Audio/attacksounds/DefaultSoundEffects/'+lst[i]))
+            sound_list[i].set_volume(0.3)
+    need_move=True
     if side==0:
-        hero=Character(user_text, (0,0), animation_list, idle, side)
+        hero=Character(user_text, (0,0), sound_list, animation_list, idle, side, need_move)
         hero.SetRandomStats()
         all_sprites.add(hero)
         return hero
     else:
-        enemy=Character(user_text, (260,0), animation_list, idle, side)
+        enemy=Character(user_text, (260,0), sound_list, animation_list, idle, side, need_move)
         enemy.SetRandomStats()
         all_sprites.add(enemy)
         return enemy
