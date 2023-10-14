@@ -1,5 +1,5 @@
 class Hero(object):
-    def __init__(self, name, health , damage, armour):
+    def __init__(self, name, health, damage, armour):
         self.name = name
         self.health = health
         self.damage = damage

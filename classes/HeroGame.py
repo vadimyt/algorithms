@@ -55,6 +55,10 @@ class Character(pygame.sprite.Sprite):
 
     def destroy(self):
         self.kill()
+        self.__del__()
+
+    def __del__(self):
+        pass
 
     def SetRandomStats(self):
         self.health=random.randint(0+50*self.level,100+50*self.level)
@@ -93,10 +97,10 @@ class UI():
             pygame.sprite.Sprite.__init__(self)
             self.image=base_font.render(str(text),True,(color))
             self.rect=self.image.get_rect()
-            self.rect.topleft=position
-            
+            self.rect.topleft=position            
         def destroy(self):
             self.kill()
+            UI.__del__(self)
     class Screen_devider(pygame.sprite.Sprite):
         def __init__(self):
             pygame.sprite.Sprite.__init__(self)
@@ -106,7 +110,7 @@ class UI():
             self.rect.topleft = (default_x+0,default_y+100)
         def destroy(self):
             self.kill()
-
+            UI.__del__(self)
     class HealthSprite(pygame.sprite.Sprite):
         def __init__(self, side):
             pygame.sprite.Sprite.__init__(self)
@@ -118,7 +122,9 @@ class UI():
                 self.rect.topleft = (default_x+210,default_y+110)
         def destroy(self):
             self.kill()
-
+            UI.__del__(self)
+        def __del__(self):
+            pass
     class ArmourSprite(pygame.sprite.Sprite):
         def __init__(self, side):
             pygame.sprite.Sprite.__init__(self)
@@ -130,7 +136,7 @@ class UI():
                 self.rect.topleft = (default_x+260,default_y+110)
         def destroy(self):
             self.kill()
-
+            UI.__del__(self)
     class DamageSprite(pygame.sprite.Sprite):
         def __init__(self, side):
             pygame.sprite.Sprite.__init__(self)
@@ -142,7 +148,9 @@ class UI():
                 self.rect.topleft = (default_x+310,default_y+110)
         def destroy(self):
             self.kill()
-
+            UI.__del__(self)
+    def __del__(self):
+            pass
 def main():
     pygame.mixer.pre_init(44100, -16, 1, 512)
     pygame.init()
