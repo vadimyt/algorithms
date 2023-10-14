@@ -135,10 +135,10 @@ def partition(array,low,high):
 def TestSorts():
     CreateUnsorted(10000)
     array=ReadFromUnsorted()
-    p1=Process(target=BubleSort,args=(array,None))
-    p2=Process(target=ShakerSort,args=(array,None))    
-    p3=Process(target=InsertionSort,args=(array,None))  
-    p4=Process(target=QuickSort,args=(array,None))  
+    p1=Process(target=BubleSort,args=(array,None,True))
+    p2=Process(target=ShakerSort,args=(array,None,True))    
+    p3=Process(target=InsertionSort,args=(array,None,True))  
+    p4=Process(target=QuickSort,args=(array,None,True))  
     p1.start()
     p2.start()
     p3.start()
@@ -215,8 +215,8 @@ def OnlyQuick():
         
 def main():
     sys.setrecursionlimit(10000)
-    OnlyQuick()
-    #TestSorts()
+    #OnlyQuick()
+    TestSorts()
     #TestGraph()
     #SortsComparison()
     pass
