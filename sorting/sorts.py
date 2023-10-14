@@ -1,3 +1,4 @@
+import sys
 import time
 from multiprocessing import Process, Queue
 import random
@@ -22,7 +23,7 @@ def ReadFromUnsorted():
     # array=list(map(lambda x:x.strip(),array))
     return array
 
-def BubleSort(array,q):    
+def BubleSort(array,q,need_print=False):    
     n=len(array)
     sorted=array[:]
     start_time = time.time()
@@ -36,13 +37,14 @@ def BubleSort(array,q):
     elapsed_time = end_time - start_time
     if q!=None:
         q.put(elapsed_time)
-    #print('Время выполнения пузырьковой сортировки: ', elapsed_time, '\n')
+    if need_print:
+        print('Время выполнения пузырьковой сортировки: ', elapsed_time, '\n')
     sorted_file = open(r'sorting\BubleSorted.txt', "w", encoding='utf-8')
     for i in range(n):        
         sorted_file.write(str(sorted[i]))
     sorted_file.close()
 
-def ShakerSort(array,q):
+def ShakerSort(array,q,need_print=False):
     n=len(array)
     sorted=array[:]
     start_time=time.time()
@@ -65,13 +67,14 @@ def ShakerSort(array,q):
     elapsed_time=end_time-start_time
     if q!=None:
         q.put(elapsed_time)
-    #print('Время выполнения сортировки шейкера: ', elapsed_time, '\n')
+    if need_print:
+        print('Время выполнения сортировки шейкера: ', elapsed_time, '\n')
     sorted_file = open(r'sorting\ShakerSorted.txt', "w", encoding='utf-8')
     for i in range(n):        
         sorted_file.write(str(sorted[i]))
     sorted_file.close()
 
-def InsertionSort(array,q):
+def InsertionSort(array,q,need_print=False):
     n=len(array)
     sorted=array[:]
     start_time=time.time()
@@ -86,13 +89,14 @@ def InsertionSort(array,q):
     elapsed_time=end_time-start_time
     if q!=None:
         q.put(elapsed_time)
-    #print('Время выполнения сортировки вставками: ', elapsed_time, '\n')
+    if need_print: 
+        print('Время выполнения сортировки вставками: ', elapsed_time, '\n')
     sorted_file = open(r'sorting\InsertionSorted.txt', "w", encoding='utf-8')
     for i in range(n):        
         sorted_file.write(str(sorted[i])+'\n')
     sorted_file.close()
 
-def QuickSort(array,q):
+def QuickSort(array,q,need_print=False):
     n=len(array)
     sorted=array[:]
     start_time=time.time()
@@ -101,7 +105,8 @@ def QuickSort(array,q):
     elapsed_time=end_time-start_time
     if q!=None:
         q.put(elapsed_time)
-    #print('Время выполнения быстрой сортировки: ', elapsed_time, '\n')
+    if need_print:
+        print('Время выполнения быстрой сортировки: ', elapsed_time, '\n')
     sorted_file = open(r'sorting\QuickSorted.txt', "w", encoding='utf-8')
     for i in range(n):        
         sorted_file.write(str(sorted[i]))
@@ -203,11 +208,18 @@ def SortsComparison():
     plt.legend()
     plt.show()
 
+def OnlyQuick():
+    CreateUnsorted(50000)
+    array=ReadFromUnsorted()
+    QuickSort(array,None,need_print=True)
         
 def main():
-    TestSorts()
+    sys.setrecursionlimit(10000)
+    OnlyQuick()
+    #TestSorts()
     #TestGraph()
     #SortsComparison()
+    pass
 
 if __name__ == '__main__':
     main()
