@@ -4,6 +4,32 @@ import pygame
 import random
 import threading
 
+WIDTH = 360  # ширина игрового окна
+HEIGHT = 360 # высота игрового окна
+FPS = 60 # частота кадров в секунду
+BLACK = (0, 0, 0)   
+WHITE = (255, 255, 255) 
+all_sprites = pygame.sprite.Group()
+
+move_animation_cooldown=10
+death_animation_cooldown=500
+
+fight_cooldown=600
+
+miss_text='Промах!'
+crit_text='Крит!'
+
+battle_text_pos=((140,10))
+
+default_sound_volume=0.2
+default_music_volume=0.2
+default_attacksound_volume=0.1
+
+character_list=['Knight', 'Thief']
+
+default_y=60
+default_x=0
+
 class Character(pygame.sprite.Sprite):
     def __init__(self, name, position, sound_list, animation_list, idle, side, need_move=False, health=100 , damage=20, armour=15, level=1):
         self.name = name
@@ -35,7 +61,7 @@ class Character(pygame.sprite.Sprite):
         self.damage=random.randint(0+50*self.level,100+50*self.level)
         self.armour=random.randint(0+50*self.level,100+50*self.level)
 
-    def punch(self, enemy):
+    def punch(self, enemy):        
         enemy.armour = enemy.armour - self.damage
         if enemy.armour<0:
             enemy.health = enemy.health + enemy.armour
@@ -46,12 +72,26 @@ class Character(pygame.sprite.Sprite):
             else:
                 enemy.image = enemy.death_animation_list[0]
 
+    def Throw_d20(self, enemy):
+        d20=random.randint(1,20)
+        if d20==1:
+            return d20
+        else: 
+            if d20==20:
+                self.damage*=2
+                self.punch(enemy)
+                self.damage/=2
+                return d20
+            else:
+                self.punch(enemy)
+                return d20
+
 class UI():
     class Text(pygame.sprite.Sprite):
-        def __init__(self, text, position):
-            base_font=pygame.font.Font(None,28)
+        def __init__(self, text, position, color=BLACK, size=28):
+            base_font=pygame.font.Font(None,size)
             pygame.sprite.Sprite.__init__(self)
-            self.image=base_font.render(str(text),True,(BLACK))
+            self.image=base_font.render(str(text),True,(color))
             self.rect=self.image.get_rect()
             self.rect.topleft=position
             
@@ -63,7 +103,7 @@ class UI():
             self.image = pygame.Surface((360, 10))
             self.image.fill(BLACK)
             self.rect = self.image.get_rect()
-            self.rect.topleft = (0,100)
+            self.rect.topleft = (default_x+0,default_y+100)
         def destroy(self):
             self.kill()
 
@@ -73,9 +113,9 @@ class UI():
             self.image = pygame.image.load('classes/Interface/health.png')
             self.rect = self.image.get_rect()            
             if side==0:
-                self.rect.topleft = (0,110)
+                self.rect.topleft = (default_x+0,default_y+110)
             else:
-                self.rect.topleft = (210,110)
+                self.rect.topleft = (default_x+210,default_y+110)
         def destroy(self):
             self.kill()
 
@@ -85,9 +125,9 @@ class UI():
             self.image = pygame.image.load('classes/Interface/armour.png')
             self.rect = self.image.get_rect()
             if side==0:
-                self.rect.topleft = (50,110)
+                self.rect.topleft = (default_x+50,default_y+110)
             else:
-                self.rect.topleft = (260,110)
+                self.rect.topleft = (default_x+260,default_y+110)
         def destroy(self):
             self.kill()
 
@@ -97,25 +137,11 @@ class UI():
             self.image = pygame.image.load('classes/Interface/damage.png')
             self.rect = self.image.get_rect()
             if side==0:
-                self.rect.topleft = (100,110)
+                self.rect.topleft = (default_x+100,default_y+110)
             else:
-                self.rect.topleft = (310,110)
+                self.rect.topleft = (default_x+310,default_y+110)
         def destroy(self):
             self.kill()
-
-WIDTH = 360  # ширина игрового окна
-HEIGHT = 360 # высота игрового окна
-FPS = 60 # частота кадров в секунду
-BLACK = (0, 0, 0)   
-WHITE = (255, 255, 255) 
-all_sprites = pygame.sprite.Group()
-
-move_animation_cooldown=10
-death_animation_cooldown=500
-
-fight_cooldown=600
-
-character_list=['Knight', 'Thief', 'NecoArc', 'Masuna']
 
 def main():
     pygame.mixer.pre_init(44100, -16, 1, 512)
@@ -124,9 +150,9 @@ def main():
     music=['classes/Audio/music/N21_-_peripleumonicis.mp3','classes/Audio/music/N14_-_evil_mage_theme.mp3']
     curtrack=random.randint(0,len(music)-1)
     ha_sound = pygame.mixer.Sound('classes/Audio/sounds/ha.mp3')
-    ha_sound.set_volume(0.3)
+    ha_sound.set_volume(default_sound_volume)
     pygame.mixer.music.load(music[curtrack])
-    pygame.mixer.music.set_volume(0.3)
+    pygame.mixer.music.set_volume(default_music_volume)
     pygame.mixer.music.play(loops = -1, fade_ms=5000)
 
     last_update=pygame.time.get_ticks()
@@ -139,6 +165,8 @@ def main():
     user_text=''
     name_text='Введите имя персонажа:'    
     input_rect=pygame.Rect(255,140,140,32)
+    input_rect.x+=default_x
+    input_rect.y+=default_y
     color_active=pygame.Color('lightskyblue3')
     color_passive=pygame.Color('grey15')
     color=color_passive
@@ -196,17 +224,17 @@ def main():
                                 hero_ui=[UI.HealthSprite(0),
                                          UI.ArmourSprite(0),
                                          UI.DamageSprite(0),
-                                         UI.Text(hero.health,(0, 160)),
-                                         UI.Text(hero.armour,(50, 160)),
-                                         UI.Text(hero.damage,(100, 160))]
+                                         UI.Text(hero.health,(default_x+0, default_y+160)),
+                                         UI.Text(hero.armour,(default_x+50, default_y+160)),
+                                         UI.Text(hero.damage,(default_x+100, default_y+160))]
                                 all_sprites.add(hero_ui)
 
                                 enemy_ui=[UI.HealthSprite(1),
                                           UI.ArmourSprite(1),
                                           UI.DamageSprite(1),
-                                          UI.Text(enemy.health,(210, 160)),
-                                          UI.Text(enemy.armour,(260, 160)),
-                                          UI.Text(enemy.damage,(310, 160))]  
+                                          UI.Text(enemy.health,(default_x+210, default_y+160)),
+                                          UI.Text(enemy.armour,(default_x+260, default_y+160)),
+                                          UI.Text(enemy.damage,(default_x+310, default_y+160))]  
                                 all_sprites.add(enemy_ui)
                                 start_screen_active=False
                             case _:
@@ -220,9 +248,10 @@ def main():
                             enemy_turn=False
                         if event.key==pygame.K_BACKSPACE:
                             if pause_game==False:
-                                pause_game=True
+                                pause_game=True                               
                             else:
                                 pause_game=False
+                                    
                     if event.key==pygame.K_r:
                         frame=0
                         hero_turn=False
@@ -242,16 +271,16 @@ def main():
                         hero_ui=[UI.HealthSprite(0),
                                  UI.ArmourSprite(0),
                                  UI.DamageSprite(0),
-                                 UI.Text(hero.health,(0, 160)),
-                                 UI.Text(hero.armour,(50, 160)),
-                                 UI.Text(hero.damage,(100, 160))]
+                                 UI.Text(hero.health,(default_x+0, default_y+160)),
+                                 UI.Text(hero.armour,(default_x+50, default_y+160)),
+                                 UI.Text(hero.damage,(default_x+100, default_y+160))]
                         all_sprites.add(hero_ui)
                         enemy_ui=[UI.HealthSprite(1),
                                   UI.ArmourSprite(1),
                                   UI.DamageSprite(1),
-                                  UI.Text(enemy.health,(210, 160)),
-                                  UI.Text(enemy.armour,(260, 160)),
-                                  UI.Text(enemy.damage,(310, 160))] 
+                                  UI.Text(enemy.health,(default_x+210, default_y+160)),
+                                  UI.Text(enemy.armour,(default_x+260, default_y+160)),
+                                  UI.Text(enemy.damage,(default_x+310, default_y+160))] 
                         all_sprites.add(enemy_ui)                    
 
         all_sprites.update()
@@ -276,12 +305,20 @@ def main():
             if current_time - last_update >= fight_cooldown:
                 last_update = current_time
                 if hero_turn and fightOver!=True:
+                    try:
+                        battle_text.kill()
+                    except UnboundLocalError:
+                        pass
                     enemy_turn=True
                     hero_turn=False
                     animateHero=True
                     moveHero=True
                 else:
                     if enemy_turn and fightOver!=True:
+                        try:
+                            battle_text.kill()
+                        except UnboundLocalError:
+                            pass
                         enemy_turn=False
                         hero_turn=True
                         animateEnemy=True
@@ -320,16 +357,23 @@ def main():
                             frame=0
                             animateHero=False
                             moveHero=True
-                            hero.punch(enemy)
+                            d20=hero.Throw_d20(enemy)
+                            text=''
+                            if d20==1:
+                                text=miss_text                                
+                            elif d20==20:
+                                text=crit_text
+                            battle_text=UI.Text(text,battle_text_pos,(255,0,0),32)
+                            all_sprites.add(battle_text)
                             for i in range(6):                            
                                     enemy_ui[i].destroy()
                             if enemy.health>0:                                
                                 enemy_ui=[UI.HealthSprite(1),
                                     UI.ArmourSprite(1),
                                     UI.DamageSprite(1),
-                                    UI.Text(enemy.health,(210, 160)),
-                                    UI.Text(enemy.armour,(260, 160)),
-                                    UI.Text(enemy.damage,(310, 160))] 
+                                    UI.Text(enemy.health,(default_x+210, default_y+160)),
+                                    UI.Text(enemy.armour,(default_x+260, default_y+160)),
+                                    UI.Text(enemy.damage,(default_x+310, default_y+160))] 
                                 all_sprites.add(enemy_ui)
                         hero.image = pygame.transform.flip(hero.animation_list[frame], True, False)
             if (enemy.health<=0):
@@ -366,16 +410,23 @@ def main():
                             frame=0
                             animateEnemy=False
                             moveEnemy=True
-                            enemy.punch(hero)
+                            d20=enemy.Throw_d20(hero)
+                            text=''
+                            if d20==1:
+                                text=miss_text                                
+                            elif d20==20:
+                                text=crit_text
+                            battle_text=UI.Text(text,battle_text_pos,(255,0,0),32)
+                            all_sprites.add(battle_text)
                             for i in range(6):
                                     hero_ui[i].destroy()
                             if hero.health>0:
                                 hero_ui=[UI.HealthSprite(0),
                                             UI.ArmourSprite(0),
                                             UI.DamageSprite(0),
-                                            UI.Text(hero.health,(0, 160)),
-                                            UI.Text(hero.armour,(50, 160)),
-                                            UI.Text(hero.damage,(100, 160))]
+                                            UI.Text(hero.health,(default_x+0, default_y+160)),
+                                            UI.Text(hero.armour,(default_x+50, default_y+160)),
+                                            UI.Text(hero.damage,(default_x+100, default_y+160))]
                                 all_sprites.add(hero_ui)
                         enemy.image = enemy.animation_list[frame]
 
@@ -404,20 +455,20 @@ def createCharacter(side, character_int=99, user_text='none'):
         lst=os.listdir('classes/Audio/attacksounds/'+character_class+'SoundEffects/')
         for i in range(0,len(lst)):
             sound_list.append(pygame.mixer.Sound('classes/Audio/attacksounds/'+character_class+'SoundEffects/'+lst[i]))
-            sound_list[i].set_volume(0.3)
+            sound_list[i].set_volume(default_attacksound_volume)
     except FileNotFoundError:
         lst=os.listdir('classes/Audio/attacksounds/DefaultSoundEffects/')
         for i in range(0,len(lst)):
             sound_list.append(pygame.mixer.Sound('classes/Audio/attacksounds/DefaultSoundEffects/'+lst[i]))
-            sound_list[i].set_volume(0.3)
+            sound_list[i].set_volume(default_attacksound_volume)
     need_move=True
     if side==0:
-        hero=Character(user_text, (0,0), sound_list, animation_list, idle, side, need_move)
+        hero=Character(user_text, (default_x+0,default_y+0), sound_list, animation_list, idle, side, need_move)
         hero.SetRandomStats()
         all_sprites.add(hero)
         return hero
     else:
-        enemy=Character(user_text, (260,0), sound_list, animation_list, idle, side, need_move)
+        enemy=Character(user_text, (default_x+260,default_y+0), sound_list, animation_list, idle, side, need_move)
         enemy.SetRandomStats()
         all_sprites.add(enemy)
         return enemy
