@@ -23,7 +23,7 @@ def ReadFromUnsorted():
     # array=list(map(lambda x:x.strip(),array))
     return array
 
-def BubleSort(array,q,need_print=False):    
+def BubleSort(array,q=None,need_print=False):    
     n=len(array)
     sorted=array[:]
     start_time = time.time()
@@ -43,8 +43,9 @@ def BubleSort(array,q,need_print=False):
     for i in range(n):        
         sorted_file.write(str(sorted[i]))
     sorted_file.close()
+    return sorted
 
-def ShakerSort(array,q,need_print=False):
+def ShakerSort(array,q=None,need_print=False):
     n=len(array)
     sorted=array[:]
     start_time=time.time()
@@ -73,8 +74,9 @@ def ShakerSort(array,q,need_print=False):
     for i in range(n):        
         sorted_file.write(str(sorted[i]))
     sorted_file.close()
+    return sorted
 
-def InsertionSort(array,q,need_print=False):
+def InsertionSort(array,q=None,need_print=False):
     n=len(array)
     sorted=array[:]
     start_time=time.time()
@@ -82,9 +84,9 @@ def InsertionSort(array,q,need_print=False):
         key=int(sorted[i])
         j=i-1
         while j>=0 and key < int(sorted[j]):
-            sorted[j+1]=sorted[j]
+            sorted[j+1]=str(sorted[j])
             j-=1
-        sorted[j+1]=key
+        sorted[j+1]=str(key)
     end_time=time.time()
     elapsed_time=end_time-start_time
     if q!=None:
@@ -95,8 +97,9 @@ def InsertionSort(array,q,need_print=False):
     for i in range(n):        
         sorted_file.write(str(sorted[i])+'\n')
     sorted_file.close()
+    return sorted
 
-def QuickSort(array,q,need_print=False):
+def QuickSort(array,q=None,need_print=False):
     n=len(array)
     sorted=array[:]
     start_time=time.time()
@@ -111,6 +114,7 @@ def QuickSort(array,q,need_print=False):
     for i in range(n):        
         sorted_file.write(str(sorted[i]))
     sorted_file.close()
+    return sorted
 
 def recQuickSort(array,low,high):
     if low<high:
@@ -222,4 +226,8 @@ def main():
     pass
 
 if __name__ == '__main__':
-    main()
+    #main()
+    CreateUnsorted(100)
+    array=ReadFromUnsorted()
+    print(array)
+    print(QuickSort(array))
