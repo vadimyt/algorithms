@@ -1,23 +1,11 @@
-m = 10
-k=3
+import sys
+from PySide6 import QtWidgets
+from PySide6.QtUiTools import QUiLoader
+from UI.widget import Widget
 
-def Func(a=-5,b=5,h=0.25):
-    result=[]
-    n=1
-    while a <= b:
-        x=a
-        F=k*x+m
-        result.append([n,x,F])
-        n+=1
-        a+=h
-    return result
+loader = QUiLoader()
 
-if __name__ == "__main__":
-    #a = float(input())
-    #b = float(input())
-    #h = float(input())        
-    #res=Func(a,b,h)
-    res=Func()
-    print("№"+" "+"X"+" "+"F(x)")
-    for i in range(len(res)-1):
-        print(str(res[i][0])+" "+str(res[i][1])+" "+str(res[i][2]))
+app = QtWidgets.QApplication(sys.argv)
+window = Widget()
+window.show()
+app.exec()
