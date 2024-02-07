@@ -7,10 +7,11 @@ from sklearn.metrics import r2_score # функция для расчёта кр
 import datetime
 
 # Массивы входных данных
-x_dates = [datetime.datetime(2023, 3, 15), datetime.datetime(2023, 3, 14), datetime.datetime(2023, 3, 13), datetime.datetime(2023, 3, 10), datetime.datetime(2023, 3, 9), datetime.datetime(2023, 3, 8), datetime.datetime(2023, 3, 7), datetime.datetime(2023, 3, 6), datetime.datetime(2023, 3, 3), datetime.datetime(2023, 3, 2), datetime.datetime(2023, 3, 1), datetime.datetime(2023, 2, 28), datetime.datetime(2023, 2, 27), datetime.datetime(2023, 2, 24), datetime.datetime(2023, 2, 23), datetime.datetime(2023, 2, 22), datetime.datetime(2023, 2, 21), datetime.datetime(2023, 2, 20), datetime.datetime(2023, 2, 19), datetime.datetime(2023, 2, 17), datetime.datetime(2023, 2, 16), datetime.datetime(2023, 2, 15)]
-x = matplotlib.dates.date2num(x_dates)
+x = [1,2,3,5,6,7,8,9,10,13,14,15,16,17,20,21,22,23,24,27,28,29]
+x.reverse()
+print(len(x))
 y = [1441.28,1517.70,1476.70,1362.30,1374.70,1362.10,1370.60,1424.50,1449,1444.90,1437.60,1420.90,1427.90,1387.70,1430.70,1488.50,1522.53,1508.03,1481.03,1492.50,1525.70,1444.50]
-# 
+print(len(y))
 # Массивы numpy по входным данным
 numpy_x = np.array(x)
 numpy_y = np.array(y)
@@ -22,15 +23,15 @@ linear_trend = np.poly1d(set_line_by_data) # снижение размернос
 print("{0}x + {1}".format(*set_line_by_data)) # формула
 
 # полиномиальный
-# set_polinom_by_data = np.polyfit(numpy_x, numpy_y, 6) # работа с полиномом 6 степени
-# polinom_trend = np.poly1d(set_polinom_by_data) # Рассчитать значение полинома в точках x
-# print("${0}x^6 + {1}x^5 + {2}x^4 + {3}x^3 + {4}x^2 + {5}x + {6}$".format(*set_polinom_by_data)) # формула
-# set_polinom_by_data = np.polyfit(numpy_x, numpy_y, 6)
-
-set_polinom_by_data = np.polyfit(numpy_x, numpy_y, 2) # работа с полиномом 2 степени
+set_polinom_by_data = np.polyfit(numpy_x, numpy_y, 8) # работа с полиномом 6 степени
 polinom_trend = np.poly1d(set_polinom_by_data) # Рассчитать значение полинома в точках x
+print("${0}x^6 + {1}x^5 + {2}x^4 + {3}x^3 + {4}x^2 + {5}x + {6}$".format(*set_polinom_by_data)) # формула
+#set_polinom_by_data = np.polyfit(numpy_x, numpy_y, 6)
 
-polinom_title = "${0}x^2 + {1}x + {2}$".format(*set_polinom_by_data)
+#set_polinom_by_data = np.polyfit(numpy_x, numpy_y, 2) # работа с полиномом 2 степени
+#polinom_trend = np.poly1d(set_polinom_by_data) # Рассчитать значение полинома в точках x
+
+polinom_title = "\n ${0}x^2 + {1}x + {2}$".format(*set_polinom_by_data)
 print("${0}x^2 + {1}x + {2}$".format(*set_polinom_by_data)) # формула
 
 # логарифмический
@@ -60,10 +61,8 @@ plt.subplots_adjust(left=0.1,
                     wspace=0.4, 
                     hspace=0.4)
 
-hfmt = matplotlib.dates.DateFormatter('%Y-%b-%d')
-
 # 2 графика по горизонтали, 2 по вертикали
-plt.subplot(2, 2, 1).xaxis.set_major_formatter(hfmt)
+plt.subplot(2, 2, 1)
 
 # !!! Текущая ячейка - 1 (левый верхний график)
 plt.scatter(numpy_x, numpy_y, label = 'data') # точечный график по x_numpy, y_numpy
@@ -73,7 +72,7 @@ plt.legend(loc='upper right', fontsize=12)
 plt.title("Линейный \n$R^2=$" + str(linear_r2) + "\n{0}x + {1}".format(*set_line_by_data))
 
 # !!! Текущая ячейка - 2
-plt.subplot(2, 2, 2).xaxis.set_major_formatter(hfmt)
+plt.subplot(2, 2, 2)
 plt.scatter(numpy_x, numpy_y, label = 'data') # точечный график по x_numpy, y_numpy
 x = np.linspace(numpy_x.min(), numpy_x.max()) # набор данных для x для большей гладкости графика (50 точек)
 plt.plot(x, polinom_trend(x), linestyle='dashed', color="orange", label = 'polinomial trend') # полиномиальный тренд
@@ -82,7 +81,7 @@ plt.legend(loc = 'center left', fontsize=12, bbox_to_anchor=(1, 0.5))
 plt.title("Полиномиальный \n$R^2=$" + str(polinom_r2) + polinom_title)
 
 # !!! Текущая ячейка - 3
-plt.subplot(2, 2, 3).xaxis.set_major_formatter(hfmt)
+plt.subplot(2, 2, 3)
 plt.scatter(numpy_x, numpy_y, label = 'data') # точечный график по x_numpy, y_numpy
 plt.plot(numpy_x, log_trend, linestyle='dashed', color="orange", label = 'log trend') # логарифмический тренд
 plt.grid(color="gainsboro") # Сетка
@@ -90,7 +89,7 @@ plt.legend(loc = 'upper right', fontsize=12)
 plt.title("Логарифмический \n$R^2=$" + str(log_r2) + "\n${0}ln(x) + {1}$".format(*set_log_by_data))
 
 # !!! Текущая ячейка - 4
-plt.subplot(2, 2, 4).xaxis.set_major_formatter(hfmt)
+plt.subplot(2, 2, 4)
 plt.scatter(numpy_x, numpy_y, label = 'data') # точечный график по x_numpy, y_numpy
 plt.plot(numpy_x, exp_trend, linestyle='dashed', color="orange", label = 'exp trend')
 plt.grid(color="gainsboro") # Сетка
