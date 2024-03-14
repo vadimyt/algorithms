@@ -238,39 +238,83 @@ class SMO:
     def factorial(n):
         return factorial(n)
     
+def Tasks():
+    print("Task1")  
+    Task1 =  SMO(serviceTime=1,intensity=0.95)
+    Task1.SingleChannelWithFail()
+    Task1.print()
+    print("\n")
 
-print("Task1")  
-Task1 =  SMO(serviceTime=1,intensity=0.95)
-Task1.SingleChannelWithFail()
-Task1.print()
-print("\n")
+    print("Task2")
+    Task2 =  SMO(serviceTime=1.25,intensity=0.7)
+    Task2.SingleChannelWithQueue(len=3)
+    Task2.print()
+    print("\n")
 
-print("Task2")
-Task2 =  SMO(serviceTime=1.25,intensity=0.7)
-Task2.SingleChannelWithQueue(len=3)
-Task2.print()
-print("\n")
+    print("Task3")  
+    Task3 =  SMO(serviceTime=1,intensity=0.8)
+    Task3.MultiChannelWithQueueWithoutLen(count=3)
+    Task3.print()
+    print("\n")
 
-print("Task3")  
-Task3 =  SMO(serviceTime=1,intensity=0.8)
-Task3.MultiChannelWithQueueWithoutLen(count=3)
-Task3.print()
-print("\n")
+    print("Task4")
+    Task4 =  SMO(serviceTime=1.2,intensity=0.5)
+    Task4.SingleChannelWithFail()
+    Task4.print()
+    print("\n")
 
-print("Task4")
-Task4 =  SMO(serviceTime=1.2,intensity=0.5)
-Task4.SingleChannelWithFail()
-Task4.print()
-print("\n")
+    print("Task5")  
+    Task5 =  SMO(serviceTime=3,intensity=1)
+    Task5.MultiChannelWithQueueWithoutLen(count=3)
+    Task5.print()
+    print("\n")
 
-print("Task5")  
-Task5 =  SMO(serviceTime=3,intensity=1)
-Task5.MultiChannelWithQueueWithoutLen(count=3)
-Task5.print()
-print("\n")
+    print("Task6")
+    Task6 =  SMO(serviceTime=2,intensity=1/3)
+    Task6.MultiChannelWithQueue(count=2,len=5)
+    Task6.print()
+    print("\n")
 
-print("Task6")
-Task6 =  SMO(serviceTime=2,intensity=1/3)
-Task6.MultiChannelWithQueue(count=2,len=5)
-Task6.print()
-print("\n")
+def UserInput():
+    try:
+        serviceTime=float(input("Время обслуживания: "))
+        if (serviceTime == None | serviceTime < 0):
+            return 0
+        intensity=float(input("Интенсивность: "))
+        if (intensity == None | intensity < 0):
+            return 0
+        len=int(input("Максимальная длинна очереди: "))
+        if (len == None | len < 0):
+            return 0
+        count=int(input("Кол-во каналов: "))
+        if (count == None | count < 0):
+            return 0
+        fail = bool(input("СМО с отказом (true/false): "))
+        if (fail == None | fail != (True | False)):
+            return 0
+        else:
+            smo = SMO(serviceTime,intensity)
+            if (len != 0):
+                if (count > 1):
+                    if(fail == True):
+                        smo.MultiChannelWithQueue(count,len)
+                    else:                
+                        smo.MultiChannelWithQueueWithoutLen(count)
+                else:
+                    if(fail == True):
+                        smo.SingleChannelWithQueue(len)
+                    else:                
+                        smo.SingleChannelWithQueueWhithoutLen()
+            else:
+                if (count > 1):
+                    smo.MultiChannelWithFail()
+                else:
+                    smo.SingleChannelWithFail()
+            smo.print()
+            return 1
+    except:
+        return 0
+
+res = UserInput()
+if (res == 0):
+    print("Неверный ввод")
