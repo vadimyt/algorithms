@@ -1,150 +1,276 @@
-import time
-import numpy as np
-import math
-import matplotlib.pyplot as plt
+from math import factorial
 
-class MultiSMO_otk:
-      def __init__(self, n, _lambda, mu):
-        MultiSMO_limited.n = n
-        MultiSMO_limited._lambda = _lambda
-        MultiSMO_limited.mu = mu
-        MultiSMO_limited.p = MultiSMO_limited._lambda/MultiSMO_limited.mu
-        #характеристики        
-        MultiSMO_limited.p_0 = MultiSMO_limited.func_p_0(self)
-        MultiSMO_limited.p_otk = MultiSMO_limited.func_p_otk(self)
-        MultiSMO_limited.L_och = MultiSMO_limited.func_L_och(self)
-        MultiSMO_limited.T_och = MultiSMO_limited.func_T_och(self)
-        MultiSMO_limited.T_SMO = MultiSMO_limited.func_T_SMO(self)
-        MultiSMO_limited.k_zan = MultiSMO_limited.func_k_zan(self)  
-        MultiSMO_limited.k_sr = MultiSMO_limited.func_k_sr(self)  
+class SMO:
 
-        def func_p_otk(self):
-            return
+    '''
+        #Интeнсивность (вызов в минуту, Лямбда)
+        Intensity #Проверка на 0
 
-class MultiSMO_limited:   
-    def __init__(self, n, m, _lambda, mu):
-        MultiSMO_limited.n = n
-        MultiSMO_limited.m = m
-        MultiSMO_limited._lambda = _lambda
-        MultiSMO_limited.mu = mu
-        MultiSMO_limited.p = MultiSMO_limited._lambda/MultiSMO_limited.mu
-        MultiSMO_limited.pn = MultiSMO_limited.p/MultiSMO_limited.n
-        #характеристики        
-        MultiSMO_limited.p_0 = MultiSMO_limited.func_p_0(self)
-        MultiSMO_limited.p_otk = MultiSMO_limited.func_p_otk(self)
-        MultiSMO_limited.L_och = MultiSMO_limited.func_L_och(self)
-        MultiSMO_limited.T_och = MultiSMO_limited.func_T_och(self)
-        MultiSMO_limited.T_SMO = MultiSMO_limited.func_T_SMO(self)
-        MultiSMO_limited.k_zan = MultiSMO_limited.func_k_zan(self)  
-        MultiSMO_limited.k_sr = MultiSMO_limited.func_k_sr(self)     
-    
-    def func_p_0(self):        
-        sum=0        
-        for k in range(MultiSMO_limited.n+1):
-            sum+=(MultiSMO_limited.p**k/math.factorial(k))
-        if(MultiSMO_limited.pn == 1):
-            return (sum+MultiSMO_limited.m*MultiSMO_limited.p**(MultiSMO_limited.n+1)/(math.factorial(MultiSMO_limited.n)*MultiSMO_limited.n))**-1
+        #Время обслуживания 1 заявки
+        ServiceTime #Проверка на 0
+
+        #Интенсивность обслуживания заявок (мю)
+        IntensityService  #Проверка на 0
+
+        #Вероятность обслуживания заявки
+        ProbabilityService
+
+        #Время простоя
+        DownTime
+
+        #Вероятность отказа
+        ProbabilityFault
+
+        #Абсолютная пропускная способность (А)
+        Bandwidth
+
+        #Интенсивность потока заявок
+        MultIntensity
+
+        #Среднее число занятых каналов
+        AverageChannel
+
+        #Относительная пропускная способность
+        RelativeBandwidth
+
+        #Время ожидания в очереди
+        WaitTime
+
+        #Среднее число заявок в СМО
+        Lsmo
+
+        #Средняя длина очереди
+        QueueLength
+
+        #Вероятность образования очереди
+        ProbabilityQueue
+
+        #Среднее время нахождения в СМО
+        SMOTime
+        
+        #Статична ли СМО. False - если очередь будет стремиться в бесконечность
+        IsStatic
+    '''
+
+    def __init__(self,serviceTime, intensity):
+        self.Intensity=intensity
+        self.ServiceTime=serviceTime
+        self.IntensityService=1/self.ServiceTime
+
+    def SingleChannelWithFail(self):
+       #Вероятность обслуживания заявки
+        self.ProbabilityService=self.IntensityService/(self.Intensity+self.IntensityService)
+        #Время простоя
+        self.DownTime=1/self.Intensity
+        #Вероятность отказа в обслуживании
+        self.ProbabilityFault=1-self.ProbabilityService
+        #Пропускная способность
+        self.Bandwidth=self.Intensity*self.ProbabilityService
+        
+    def SingleChannelWithQueue(self, len):
+        p=self.Intensity/self.IntensityService
+        
+        if p==1:
+            p_0=1/(len+2)
         else:
-            return (sum+MultiSMO_limited.p**(MultiSMO_limited.n+1)/(math.factorial(MultiSMO_limited.n)*(MultiSMO_limited.n-MultiSMO_limited.p))*(1-MultiSMO_limited.pn**MultiSMO_limited.m))**-1
-   
-    def func_p_otk(self):
-        return MultiSMO_limited.p**(MultiSMO_limited.n+MultiSMO_limited.m)/(math.factorial(MultiSMO_limited.n)*(MultiSMO_limited.n**MultiSMO_limited.m))*MultiSMO_limited.p_0
-    
-    def func_L_och(self):
-        if(MultiSMO_limited.pn == 1):
-            return (MultiSMO_limited.p**(MultiSMO_limited.n+1)/(MultiSMO_limited.n*math.factorial(MultiSMO_limited.n)))*(MultiSMO_limited.m*(MultiSMO_limited.m+1)/2)*MultiSMO_limited.p_0
+            p_0=(1-p)/(1-(p**(len+2)))
+       #Вероятность обслуживания заявки
+        self.ProbabilityService=self.Intensity/(self.Intensity+self.IntensityService)
+        self.ProbabilityFault=p**(len+1)*p_0
+        self.RelativeBandwidth=1-self.ProbabilityFault
+        self.AverageChannel=self.RelativeBandwidth*self.Intensity
+        if p==1:
+                self.QueueLength=(len*(len+1))/(2*(len+2))
         else:
-            return (MultiSMO_limited.p**(MultiSMO_limited.n+1)/(MultiSMO_limited.n*math.factorial(MultiSMO_limited.n)))*((1-MultiSMO_limited.pn**MultiSMO_limited.m*(MultiSMO_limited.m+1-MultiSMO_limited.m*MultiSMO_limited.pn))/((1*MultiSMO_limited.pn)**2))
-    
-    def func_T_och(self):
-        return MultiSMO_limited.L_och/MultiSMO_limited._lambda   
-    
-    def func_T_SMO(self):
-        return MultiSMO_limited.T_och+(1-MultiSMO_limited.p_otk)/MultiSMO_limited.mu   
-    
-    def func_k_zan(self):
-        return (MultiSMO_limited._lambda/MultiSMO_limited.mu)*(1-MultiSMO_limited.p_otk)
-    
-    def func_k_sr(self):
-        return (MultiSMO_limited.k_zan/MultiSMO_limited.n)
-    
-    def print_all_char(self):
-        print("p_0=")
-        print(str(MultiSMO_limited.p_0)+"\n")
-        print("вер.отк.=")
-        print(str(MultiSMO_limited.p_otk)+"\n")
-        print("ср.дл.оч.=")
-        print(str(MultiSMO_limited.L_och)+"\n")
-        print("ср.вр.ож.оч.=")
-        print(str(MultiSMO_limited.T_och)+"\n")
-        print("ср.вр.преб.в смо.=")
-        print(str(MultiSMO_limited.T_SMO)+"\n")          
-        print("ср.зн.зан.кан.=")
-        print(str(MultiSMO_limited.k_zan)+"\n")             
-        print("коэфф.зан=")
-        print(str(MultiSMO_limited.k_sr)+"\n") 
+             self.QueueLength=(p**2)*(1-(p**len)*(len-len*p+1))/((1-p)**2)
+        self.WaitTime=self.QueueLength/self.Intensity
+        self.Lsmo=1+self.QueueLength
+        if p!=1:
+            self.SMOTime=self.Lsmo/self.Intensity
+        else:
+            self.SMOTime=(len+1)/(2*self.IntensityService)
+            
+    def SingleChannelWithQueueWhithoutLen(self):
+        p=self.Intensity/self.IntensityService
+        if p<1:
+            self.IsStatic=True
+         
+            self.QueueLength=(p**2)/(1-p)
+            self.WaitTime=self.QueueLength/self.Intensity
+            self.Lsmo=(p)/(1-p)
+            self.SMOTime=self.Lsmo/self.Intensity
+        else:
+            self.IsStatic=False
+            
+    def MultiChannelWithFail(self, ChannelCount):
+        #Вероятность обслуживания заявки
+        self.MultIntensity=self.Intensity/self.IntensityService
+        p_0=0
+        for n in range(0, ChannelCount):
+            p_0+=(self.MultIntensity**n)/SMO.factorial(n)
+        p_0=p_0**(-1)
+        self.ProbabilityService=self.Intensity/(self.Intensity+self.IntensityService)
+        self.RelativeBandwidth=self.ProbabilityService
+        self.ProbabilityFault=p_0*((self.MultIntensity**ChannelCount)/SMO.factorial(ChannelCount))
+        self.Bandwidth=self.Intensity*self.RelativeBandwidth
+        self.AverageChannel=self.Bandwidth/self.IntensityService
+        
+    def MultiChannelWithQueue(self, count,len):
+        p=self.Intensity/self.IntensityService
+        
+        if (p/count)==1:
+            p_0=0
+            for n in range(0, count):
+                p_0+=(p**n)/SMO.factorial(n)
+            p_0+=(len*(p**(count+1)))/(SMO.factorial(count)*count)
+            p_0=p_0**(-1)
+        else:
+            p_0=0
+            for n in range(0, count):
+                p_0+=(p**n)/SMO.factorial(n)
+            p_0+=(((p**(count+1))/(SMO.factorial(count)*(count-p)))*(1-((p/count)**len)))
+            p_0=p_0**(-1)
+        self.ProbabilityFault=((p**(count+len))/((count**len)*SMO.factorial(count)))*p_0
+       
+        if (p/n)==1:
+                self.QueueLength=((p*(count+1))/(count*SMO.factorial(count)))*((len*(len+1))/2)*p_0
+        else:
+             self.QueueLength=((p*(count+1))/(count*SMO.factorial(count)))*((1-(((p/count)**len)*(len+1-(len*p/count))))/((1-(p/count))**2))*p_0
+        self.WaitTime=self.QueueLength/self.Intensity
+        self.ProbabilityFault=(p**(count+len))*((p_0)/((count**len)*SMO.factorial(count)))
+        self.SMOTime=self.WaitTime+((1-self.ProbabilityFault)/(self.IntensityService))
+        self.AverageChannel=(self.Intensity/self.IntensityService)*(1-self.ProbabilityFault)
+        
+    def MultiChannelWithQueueWithoutLen(self, count):
+        p=self.Intensity/self.IntensityService
+        if (p/count)<1:
+            self.IsStatic=True
+            p_0=0
+            for n in range(0, count):
+                p_0+=(p**n)/SMO.factorial(n)
+            p_0+=(p**(count+1))/(SMO.factorial(count)*(count-p))
+            p_0=p_0**(-1)
+            self.ProbabilityQueue=((p**(count+1))/((count-p)*SMO.factorial(count)))*p_0
+            self.QueueLength=(count/(count-p))*p_0
+            self.WaitTime=self.QueueLength/self.Intensity
+            self.AverageChannel=p
+            self.Lsmo=self.QueueLength+self.AverageChannel
+            self.SMOTime=self.WaitTime+1/self.IntensityService
+        else:
+            self.IsStatic=False
 
-class MultiSMO_unlimited:   
-    def __init__(self, n, _lambda, mu):
-        MultiSMO_unlimited.n = n
-        MultiSMO_unlimited._lambda = _lambda
-        MultiSMO_unlimited.mu = mu
-        MultiSMO_unlimited.p = MultiSMO_unlimited._lambda/MultiSMO_unlimited.mu
-        MultiSMO_unlimited.pn = MultiSMO_unlimited.p/MultiSMO_unlimited.n
-        #характеристики        
-        MultiSMO_unlimited.p_0 = MultiSMO_unlimited.func_p_0(self)
-        MultiSMO_unlimited.p_och = MultiSMO_unlimited.func_p_och(self)
-        MultiSMO_unlimited.L_och = MultiSMO_unlimited.func_L_och(self)
-        MultiSMO_unlimited.T_och = MultiSMO_unlimited.func_T_och(self)
-        MultiSMO_unlimited.T_SMO = MultiSMO_unlimited.func_T_SMO(self)
-        MultiSMO_unlimited.k_sr = MultiSMO_unlimited.func_k_sr(self)
-        MultiSMO_unlimited.k_zan = MultiSMO_unlimited.func_k_zan(self)        
-        MultiSMO_unlimited.L_SMO = MultiSMO_unlimited.func_L_SMO(self)
+    def print(self):
+        print("Интeнсивность "+str(self.Intensity))
+        print("Время обслуживания 1 заявки "+str(self.ServiceTime))
+        print("---------------------------------------------")
+        print("Характеристики СМО")
+        try:
+            if(self.IntensityService!=None):
+                print("Интенсивность обслуживания заявок: "+str(self.IntensityService))            
+        except:
+            pass
+        try:
+            if(self.ProbabilityService!=None):
+                print("Вероятность обслуживания заявки: "+str(self.ProbabilityService))            
+        except:
+            pass
+        try:
+            if(self.DownTime!=None):
+                print("Время простоя: "+str(self.DownTime))        
+        except:
+            pass 
+        try:   
+            if(self.ProbabilityFault!=None):
+                print("Вероятность отказа: "+str(self.ProbabilityFault))      
+        except:
+            pass  
+        try:    
+            if(self.Bandwidth!=None):
+                print("Абсолютная пропускная способность: "+str(self.Bandwidth))     
+        except:
+            pass     
+        try:  
+            if(self.MultIntensity!=None):
+                print("Интенсивность потока заявок: "+str(self.MultIntensity))    
+        except:
+            pass        
+        try:
+            if(self.AverageChannel!=None):
+                print("Среднее число занятых каналов: "+str(self.AverageChannel))   
+        except:
+            pass      
+        try:   
+            if(self.RelativeBandwidth!=None):
+                print("Относительная пропускная способность: "+str(self.RelativeBandwidth))  
+        except:
+            pass  
+        try:        
+            if(self.WaitTime!=None):
+                print("Время ожидания в очереди: "+str(self.WaitTime))     
+        except:
+            pass      
+        try: 
+            if(self.Lsmo!=None):
+                print("Среднее число заявок в СМО: "+str(self.Lsmo))   
+        except:
+            pass      
+        try:   
+            if(self.QueueLength!=None):
+                print("Средняя длина очереди: "+str(self.QueueLength))   
+        except:
+            pass      
+        try:   
+            if(self.ProbabilityQueue!=None):
+                print("Вероятность образования очереди: "+str(self.ProbabilityQueue))  
+        except:
+            pass          
+        try:
+            if(self.SMOTime!=None):
+                print("Среднее время нахождения в СМО: "+str(self.SMOTime))    
+        except:
+            pass        
+        try:
+            if(self.IsStatic!=None):
+                print("Статична ли СМО. False - если очередь будет стремиться в бесконечность: "+str(self.IsStatic)) 
+        except:
+            pass           
     
-    def func_p_0(self):
-        sum=0
-        for k in range(MultiSMO_unlimited.n+1):
-            sum+=(MultiSMO_unlimited.p**k/math.factorial(k))
-        return (sum+MultiSMO_unlimited.p**(MultiSMO_unlimited.n+1)/(math.factorial(MultiSMO_unlimited.n)*(MultiSMO_unlimited.n-MultiSMO_unlimited.p)))**-1
+    def factorial(n):
+        return factorial(n)
     
-    def func_p_och(self):
-        return MultiSMO_unlimited.p**(MultiSMO_unlimited.n+1)/(math.factorial(MultiSMO_unlimited.n)*(MultiSMO_unlimited.n-MultiSMO_unlimited.p))*MultiSMO_unlimited.p_0
-    
-    def func_L_och(self):
-        return (MultiSMO_unlimited.n/(MultiSMO_unlimited.n-MultiSMO_unlimited.p))*MultiSMO_unlimited.p_och
-    
-    def func_T_och(self):
-        return MultiSMO_unlimited.L_och/MultiSMO_unlimited._lambda   
-    
-    def func_T_SMO(self):
-        return MultiSMO_unlimited.T_och+1/MultiSMO_unlimited.mu
-    
-    def func_k_sr(self):
-        return MultiSMO_unlimited.p
-    
-    def func_k_zan(self):
-        return MultiSMO_unlimited.k_sr/MultiSMO_unlimited.n
 
-    def func_L_SMO(self):
-        return MultiSMO_unlimited.L_och + MultiSMO_unlimited.k_sr
-    
-    def print_all_char(self):
-        print("p_0=")
-        print(str(MultiSMO_unlimited.p_0)+"\n")
-        print("вер.оч.=")
-        print(str(MultiSMO_unlimited.p_och)+"\n")
-        print("ср.дл.оч.=")
-        print(str(MultiSMO_unlimited.L_och)+"\n")
-        print("ср.вр.ож.оч.=")
-        print(str(MultiSMO_unlimited.T_och)+"\n")
-        print("ср.вр.преб.в смо.=")
-        print(str(MultiSMO_unlimited.T_SMO)+"\n")
-        print("ср.ч.зан.кан.=")
-        print(str(MultiSMO_unlimited.k_sr)+"\n")
-        print("коэфф.зан=")
-        print(str(MultiSMO_unlimited.k_zan)+"\n")
-        print("ср.ч.заяв.в смо.=")
-        print(str(MultiSMO_unlimited.L_SMO)+"\n")
+print("Task1")  
+Task1 =  SMO(serviceTime=1,intensity=0.95)
+Task1.SingleChannelWithFail()
+Task1.print()
+print("\n")
 
-tmp=MultiSMO_limited(n=3,m=5,_lambda=6,mu=2)
-tmp.print_all_char()
+print("Task2")
+Task2 =  SMO(serviceTime=1.25,intensity=0.7)
+Task2.SingleChannelWithQueue(len=3)
+Task2.print()
+print("\n")
+
+print("Task3")  
+Task3 =  SMO(serviceTime=1,intensity=0.8)
+Task3.MultiChannelWithQueueWithoutLen(count=3)
+Task3.print()
+print("\n")
+
+print("Task4")
+Task4 =  SMO(serviceTime=1.2,intensity=0.5)
+Task4.SingleChannelWithFail()
+Task4.print()
+print("\n")
+
+print("Task5")  
+Task5 =  SMO(serviceTime=3,intensity=1)
+Task5.MultiChannelWithQueueWithoutLen(count=3)
+Task5.print()
+print("\n")
+
+print("Task6")
+Task6 =  SMO(serviceTime=2,intensity=1/3)
+Task6.MultiChannelWithQueue(count=2,len=5)
+Task6.print()
+print("\n")
