@@ -315,6 +315,7 @@ def UserInput():
     except:
         return 0
 
-res = UserInput()
-if (res == 0):
-    print("Неверный ввод")
+if __name__ == '__main__':
+    res = UserInput()
+    if (res == 0):
+        print("Неверный ввод")
