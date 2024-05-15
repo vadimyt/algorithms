@@ -7,15 +7,12 @@ import random
 import simpy
 
 RANDOM_SEED = 0  # не установлено
-NUM_SERVERS = 2  # Количество серверов
-TIME_CONSUMING = 2  # Обслуживание 1 клиента
-TIME_INTERVAL = 3  # Время между 2-мя заявками
+NUM_SERVERS = 3  # Количество банкоматов
+TIME_CONSUMING = 5  # Обслуживание 1 клиента
+TIME_INTERVAL = 1/0.8  # Время между 2-мя заявками
 SIM_TIME = 1000  # Общее время моделирования
-QUEUEUE_LENGTH = 5
+QUEUEUE_LENGTH = 20
 CLIENT_NUMBER = 0  # Изначально уже занято количество машин
-
-queueue_lenth_mid = []
-time_medium = []
 
 class Server(object):
     def __init__(self, env, num_servers, consuming_time, queue_length):
@@ -38,7 +35,6 @@ class Server(object):
         #print("Количество клиентов, обслуживаемых рабочими станциями:% d. "
         #      % (self.allClient))
         t = env.timeout(random.triangular(0.6, 1.5, 0.9))
-        time_medium.append(t)
         yield t
 
 def Client(env, name, cw):
@@ -59,7 +55,6 @@ def setup(env, workstation, t_inter, clientNumber):
         i += 1
 
     while True:
-        queueue_lenth_mid.append(workstation.current_queue_length)
         yield env.timeout(t_inter)
         if(workstation.current_queue_length > workstation.queue_length):
             workstation.available = False
@@ -91,15 +86,6 @@ env.run(until=SIM_TIME)
 print("Конец симуляции")
 print("Результаты симуляции. Процент отказов:")
 print(workstation.cancel_counter / workstation.all_clients)
-i=0
-for queue in queueue_lenth_mid:
-    i+=queue
-print("Средняя длинна очереди: " + str(i/len(queueue_lenth_mid)))
-i=0
-for time in time_medium:
-    i+=time._delay
-print("Среднеевремя ожидания в СМО: " + str(i/len(time_medium)))
-
 
 # Расчёт характеристик СМО
 handler = SMO(TIME_CONSUMING,1/TIME_INTERVAL)
