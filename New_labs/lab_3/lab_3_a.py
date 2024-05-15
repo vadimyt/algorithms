@@ -278,19 +278,19 @@ def Tasks():
 def UserInput():
     try:
         serviceTime=float(input("Время обслуживания: "))
-        if (serviceTime == None | serviceTime < 0):
+        if (serviceTime == None or serviceTime < 0):
             return 0
         intensity=float(input("Интенсивность: "))
-        if (intensity == None | intensity < 0):
+        if (intensity == None or intensity < 0):
             return 0
         len=int(input("Максимальная длинна очереди: "))
-        if (len == None | len < 0):
+        if (len == None or len < 0):
             return 0
         count=int(input("Кол-во каналов: "))
-        if (count == None | count < 0):
+        if (count == None or count < 0):
             return 0
         fail = bool(input("СМО с отказом (true/false): "))
-        if (fail == None | fail != (True | False)):
+        if (fail == None or fail != (True or False)):
             return 0
         else:
             smo = SMO(serviceTime,intensity)
@@ -316,6 +316,7 @@ def UserInput():
         return 0
 
 if __name__ == '__main__':
-    res = UserInput()
-    if (res == 0):
-        print("Неверный ввод")
+    Tasks()
+    #res = UserInput()
+    #if (res == 0):
+        #print("Неверный ввод")

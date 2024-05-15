@@ -29,7 +29,7 @@ plt.rcParams["figure.autolayout"] = True
 x = np.array([x for x in range(signal_amount)])
 y = np.array(values)
 
-expected_val = sum(values)/signal_amount
+expected_val = np.random.gumbel(0,1)
 dispersion = sum(list(map(lambda x: (x-expected_val) ** 2,values)))/signal_amount
 standart_deviation = dispersion**0.5
 print(f"Количество чисел равно {signal_amount}")
